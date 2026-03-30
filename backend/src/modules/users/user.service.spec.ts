@@ -17,6 +17,7 @@ describe('UsersService', () => {
           useValue: {
             find: jest.fn(),
             create: jest.fn(),
+            findOneBy: jest.fn(),
             save: jest.fn(),
           },
         },

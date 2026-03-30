@@ -29,6 +29,10 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
+  findById(id: number): Promise<User | null> {
+    return this.usersRepository.findOneBy({ id });
+  }
+
   findByFirebaseUid(firebaseUid: string): Promise<User | null> {
     return this.usersRepository.findOneBy({ firebase_uid: firebaseUid });
   }
