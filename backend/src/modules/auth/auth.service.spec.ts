@@ -6,7 +6,7 @@ import { User } from '../users/user.entity';
 import { UsersService } from '../users/user.service';
 import { AuthService } from './auth.service';
 
-describe('Serviço de Autenticação', () => {
+describe('AuthService', () => {
   let authService: AuthService;
   let usersService: jest.Mocked<Pick<UsersService, 'findByFirebaseUid'>>;
   let firebaseService: jest.Mocked<Pick<FirebaseAuthService, 'verifyIdToken'>>;
@@ -42,7 +42,7 @@ describe('Serviço de Autenticação', () => {
   });
 
   describe('loginWithFirebase', () => {
-    it('deve retornar um usuário quando há um token válido e o usuário existe', async () => {
+    it('should return an user when token is valid and user exist', async () => {
       const idToken = 'valid-id-token';
       const firebaseUid = 'firebase-uid-123';
       const decodedToken = {
@@ -77,7 +77,7 @@ describe('Serviço de Autenticação', () => {
       expect(usersService.findByFirebaseUid).toHaveBeenCalledTimes(1);
     });
 
-    it('deve lançar um erro do tipo NotFoundException quando o usuário não existe no banco de dados', async () => {
+    it('should throw a NotFoundException error when user doesnt exist on database', async () => {
       const idToken = 'valid-id-token';
       const firebaseUid = 'firebase-uid-123';
       const decodedToken = {
@@ -95,7 +95,7 @@ describe('Serviço de Autenticação', () => {
       expect(usersService.findByFirebaseUid).toHaveBeenCalledWith(firebaseUid);
     });
 
-    it('deve lançar um erro quando o token é inválido', async () => {
+    it('should throw an error when token is invalid', async () => {
       const idToken = 'invalid-id-token';
       const error = new Error('Invalid Firebase token');
 
