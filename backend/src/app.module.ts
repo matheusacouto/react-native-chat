@@ -6,6 +6,7 @@ import { UsersModule } from './modules/users/user.module';
 import { NotificationsModule } from './modules/notificatios/notification.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AppParametersModule } from './modules/app-parameters/app-parameters.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AuthModule } from './modules/auth/auth.module';
     NotificationsModule,
     ChatModule,
     AuthModule,
+    AppParametersModule,
   ],
 })
 export class AppModule {}
