@@ -31,11 +31,13 @@ export class ChatService {
     targetUserId: number,
   ): Promise<Conversation | null> {
     if (currentUserId === targetUserId) {
-      throw new BadRequestException('');
+      throw new BadRequestException('O destinatário não pode ser o remetente');
     }
 
     if (targetUserId == null) {
-      throw new BadRequestException();
+      throw new BadRequestException(
+        'O destinatário não foi encontrado na base de dados',
+      );
     }
 
     const conversation = await this.conversationRepository.findOne({
@@ -52,6 +54,28 @@ export class ChatService {
     });
 
     return conversation || null;
+  }
+
+  async findMessagesByConversation(conversationId: number): Promise<Message[]> {
+    const conversation = await this.conversationRepository.findOneBy({
+      id: conversationId,
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Conversa não encontrada.');
+    }
+
+    return this.messageRepository.find({
+      where: {
+        conversa: {
+          id: conversationId,
+        },
+      },
+      relations: ['remetente', 'destinatario', 'conversa'],
+      order: {
+        created_at: 'ASC',
+      },
+    });
   }
 
   /**
