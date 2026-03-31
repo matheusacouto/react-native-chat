@@ -35,11 +35,11 @@ export class NotificationsController {
   ) {
     return this.notificationsService.sendIndividualNotification(
       req.user.uid,
-      body.destinatarioId,
-      body.titulo,
-      body.descricao,
-      body.icone,
-      body.rotaDestino,
+      body.recipientId,
+      body.title,
+      body.description,
+      body.icon,
+      body.destinationRoute,
       body.payload,
     );
   }
@@ -48,10 +48,10 @@ export class NotificationsController {
   sendGlobalNotification(@Req() req, @Body() body: SendGlobalNotificationDto) {
     return this.notificationsService.sendGlobalNotification(
       req.user.uid,
-      body.titulo,
-      body.descricao,
-      body.icone,
-      body.rotaDestino,
+      body.title,
+      body.description,
+      body.icon,
+      body.destinationRoute,
       body.payload,
     );
   }

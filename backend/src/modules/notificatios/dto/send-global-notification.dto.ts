@@ -1,7 +1,7 @@
 export class SendGlobalNotificationDto {
-  titulo: string;
-  descricao: string;
-  icone: string | null;
-  rotaDestino: string | null;
+  title: string;
+  description: string;
+  icon: string | null;
+  destinationRoute: string | null;
   payload: Record<string, any> | null;
 }
