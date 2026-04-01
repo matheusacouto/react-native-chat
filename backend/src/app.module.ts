@@ -7,6 +7,11 @@ import { NotificationsModule } from './modules/notificatios/notification.module'
 import { ChatModule } from './modules/chat/chat.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AppParametersModule } from './modules/app-parameters/app-parameters.module';
+import { Notification } from './modules/notificatios/notification.entity';
+import { Message } from './modules/chat/entity/message.entity';
+import { Conversation } from './modules/chat/entity/conversation.entity';
+import { AppParameter } from './modules/app-parameters/app-parameters.entity';
+import { NotificationRecipient } from './modules/notificatios/notification-recipient.entity';
 
 @Module({
   imports: [
@@ -20,7 +25,14 @@ import { AppParametersModule } from './modules/app-parameters/app-parameters.mod
         username: configService.get('PG_USER'),
         password: configService.get('PG_PASSWORD'),
         database: configService.get('PG_DB'),
-        entities: [User],
+        entities: [
+          User,
+          Notification,
+          NotificationRecipient,
+          Message,
+          Conversation,
+          AppParameter,
+        ],
         synchronize: true,
       }),
       inject: [ConfigService],
