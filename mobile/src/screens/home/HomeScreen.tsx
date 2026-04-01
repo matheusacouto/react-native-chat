@@ -40,6 +40,24 @@ export default function HomeScreen() {
 
         <Pressable
           style={styles.secondaryButton}
+          onPress={() => router.push("/global-notification-form")}
+        >
+          <Text style={styles.secondaryButtonText}>
+            Enviar Notificação Global
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.secondaryButton}
+          onPress={() => router.push("/individual-notification-form")}
+        >
+          <Text style={styles.secondaryButtonText}>
+            Enviar Notificação Individual
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.secondaryButton}
           onPress={() => router.push("/chat")}
         >
           <Text style={styles.secondaryButtonText}>Chat</Text>

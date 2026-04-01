@@ -1,7 +1,9 @@
 import { AuthContext } from "@/src/contexts/AuthContext";
+import { useConnectivity } from "@/src/contexts/ConnectivityContext";
 import { useContext, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -16,6 +18,7 @@ import { Redirect, router } from "expo-router";
 export default function LoginScreen() {
   const { signIn, signInWithGoogle, isLoading, isAuthenticated } =
     useContext(AuthContext);
+  const { isOnline } = useConnectivity();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,12 +27,29 @@ export default function LoginScreen() {
     return <Redirect href="/home" />;
   }
 
+  function canProceedWithOnlineAction() {
+    if (isOnline) {
+      return true;
+    }
+
+    Alert.alert("Sem internet", "Conecte-se para continuar.");
+    return false;
+  }
+
   async function handleLogin() {
+    if (!canProceedWithOnlineAction()) {
+      return;
+    }
+
     await signIn(email, password);
     router.replace("/home");
   }
 
   async function handleGoogleLogin() {
+    if (!canProceedWithOnlineAction()) {
+      return;
+    }
+
     await signInWithGoogle();
     router.replace("/home");
   }

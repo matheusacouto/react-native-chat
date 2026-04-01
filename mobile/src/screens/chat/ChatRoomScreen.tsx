@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import {
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -16,9 +17,11 @@ import {
 import { MessageModel } from "@/src/models/message";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AuthContext } from "@/src/contexts/AuthContext";
+import { useConnectivity } from "@/src/contexts/ConnectivityContext";
 
 export default function ChatRoomScreen() {
   const { user } = useContext(AuthContext);
+  const { isOnline } = useConnectivity();
 
   const { conversationId, targetUserId } = useLocalSearchParams<{
     conversationId: string;
@@ -48,6 +51,11 @@ export default function ChatRoomScreen() {
 
   async function handleSendMessage() {
     if (!user || !targetUserId || !text.trim()) {
+      return;
+    }
+
+    if (!isOnline) {
+      Alert.alert("Sem internet", "Conecte-se para enviar mensagens.");
       return;
     }
 
