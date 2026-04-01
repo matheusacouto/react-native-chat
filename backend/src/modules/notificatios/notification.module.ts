@@ -8,12 +8,14 @@ import { NotificationsService } from './notification.service';
 import { NotificationsController } from './notification.controller';
 import { FirebaseAuthService } from '../firebase/firebase.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
+import { PushModule } from '../push/push.module';
 
 @Module({
   providers: [NotificationsService, FirebaseAuthService, FirebaseAuthGuard],
   imports: [
     TypeOrmModule.forFeature([Notification, NotificationRecipient]),
     UsersModule,
+    PushModule,
   ],
   controllers: [NotificationsController],
 })

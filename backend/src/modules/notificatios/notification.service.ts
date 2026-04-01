@@ -9,6 +9,8 @@ import { Notification, Tipo } from './notification.entity';
 import { NotificationRecipient } from './notification-recipient.entity';
 import { UsersService } from '../users/user.service';
 import { User } from '../users/user.entity';
+import { PushService } from '../push/push.service';
+import { FirebaseAuthService } from '../firebase/firebase.service';
 
 @Injectable()
 export class NotificationsService {
@@ -20,6 +22,8 @@ export class NotificationsService {
     private readonly notificationRecipientsRepository: Repository<NotificationRecipient>,
 
     private readonly usersService: UsersService,
+    private readonly pushService: PushService,
+    private readonly firebaseService: FirebaseAuthService,
   ) {}
 
   async findAllByFirebaseUid(
@@ -104,8 +108,24 @@ export class NotificationsService {
       entregue_push: false,
       entregue_push_em: null,
     });
+    const savedRecipient =
+      await this.notificationRecipientsRepository.save(recipient);
 
-    return this.notificationRecipientsRepository.save(recipient);
+    const pushDelivered = await this.sendPushNotification([destinatario.id], {
+      title: titulo,
+      description: descricao,
+      destinationRoute: rotaDestino,
+      payload,
+    });
+
+    if (pushDelivered) {
+      savedRecipient.entregue_push = true;
+      savedRecipient.entregue_push_em = new Date();
+
+      return this.notificationRecipientsRepository.save(savedRecipient);
+    }
+
+    return savedRecipient;
   }
 
   async sendGlobalNotification(
@@ -144,8 +164,61 @@ export class NotificationsService {
         entregue_push_em: null,
       }),
     );
+    const savedRecipients =
+      await this.notificationRecipientsRepository.save(recipients);
 
-    return this.notificationRecipientsRepository.save(recipients);
+    const pushDelivered = await this.sendPushNotification(
+      destinatarios.map((usuario) => usuario.id),
+      {
+        title: titulo,
+        description: descricao,
+        destinationRoute: rotaDestino,
+        payload,
+      },
+    );
+
+    if (pushDelivered) {
+      const deliveredAt = new Date();
+
+      savedRecipients.forEach((recipient) => {
+        recipient.entregue_push = true;
+        recipient.entregue_push_em = deliveredAt;
+      });
+
+      return this.notificationRecipientsRepository.save(savedRecipients);
+    }
+
+    return savedRecipients;
+  }
+
+  private async sendPushNotification(
+    userIds: number[],
+    notification: {
+      title: string;
+      description: string;
+      destinationRoute?: string | null;
+      payload?: Record<string, any> | null;
+    },
+  ): Promise<boolean> {
+    const tokens = await this.pushService.findActiveTokensByUserIds(userIds);
+
+    if (!tokens.length) {
+      return false;
+    }
+
+    const response = await this.firebaseService.sendPushNotificationToTokens(
+      tokens,
+      {
+        title: notification.title,
+        body: notification.description,
+        route: notification.destinationRoute ?? null,
+        payload: notification.payload ?? null,
+      },
+    );
+
+    return (
+      (response?.successCount ?? 0) > 0 && (response?.failureCount ?? 0) === 0
+    );
   }
 
   private async getUserByFirebaseUid(firebaseUid: string): Promise<User> {

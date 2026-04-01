@@ -12,6 +12,8 @@ import { Message } from './modules/chat/entity/message.entity';
 import { Conversation } from './modules/chat/entity/conversation.entity';
 import { AppParameter } from './modules/app-parameters/app-parameters.entity';
 import { NotificationRecipient } from './modules/notificatios/notification-recipient.entity';
+import { PushToken } from './modules/push/push-token.entity';
+import { PushModule } from './modules/push/push.module';
 
 @Module({
   imports: [
@@ -32,6 +34,7 @@ import { NotificationRecipient } from './modules/notificatios/notification-recip
           Message,
           Conversation,
           AppParameter,
+          PushToken,
         ],
         synchronize: true,
       }),
@@ -42,6 +45,7 @@ import { NotificationRecipient } from './modules/notificatios/notification-recip
     ChatModule,
     AuthModule,
     AppParametersModule,
+    PushModule,
   ],
 })
 export class AppModule {}
