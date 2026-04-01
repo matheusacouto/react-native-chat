@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { getIdToken } from "@/src/services/firebase/auth";
 import {
   getNotifications,
@@ -8,17 +8,18 @@ import {
 import { NotificationItem } from "@/src/models/notification";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { useConnectivity } from "@/src/contexts/ConnectivityContext";
+import { useRequireInternet } from "@/src/hooks/useRequireInternet";
+import { BackButton } from "@/src/components/BackButton";
 
 export default function NotificationsScreen() {
-  const { isOnline } = useConnectivity();
+  const requireInternet = useRequireInternet();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadNotifications() {
       try {
-        if (!isOnline) {
+        if (!requireInternet("Conecte-se para carregar notificações.")) {
           return;
         }
 
@@ -36,16 +37,13 @@ export default function NotificationsScreen() {
     }
 
     loadNotifications();
-  }, []);
+  }, [requireInternet]);
 
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backButtonArrow}>‹</Text>
-            <Text style={styles.backButtonText}>Voltar</Text>
-          </Pressable>
+          <BackButton onPress={() => router.back()} style={styles.backButton} />
           <Text style={styles.title}>Notificações</Text>
         </View>
         <Text style={styles.message}>Carregando...</Text>
@@ -54,8 +52,7 @@ export default function NotificationsScreen() {
   }
 
   async function handlePressNotification(item: NotificationItem) {
-    if (!isOnline) {
-      Alert.alert("Sem internet", "Conecte-se para abrir notificações.");
+    if (!requireInternet("Conecte-se para abrir notificações.")) {
       return;
     }
 
@@ -67,8 +64,8 @@ export default function NotificationsScreen() {
 
     if (!item.lida) {
       const updatedNotification = await markNotificationAsRead(
-        item.id,
         idToken,
+        item.id,
       );
 
       setNotifications((current) =>
@@ -86,10 +83,7 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonArrow}>‹</Text>
-          <Text style={styles.backButtonText}>Voltar</Text>
-        </Pressable>
+        <BackButton onPress={() => router.back()} style={styles.backButton} />
         <Text style={styles.title}>Notificações</Text>
       </View>
 
@@ -129,33 +123,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   backButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#ffffff",
-    borderColor: "#d9e2ec",
-    borderRadius: 12,
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
     marginBottom: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
     shadowColor: "#102a43",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
     shadowRadius: 10,
     elevation: 2,
-  },
-  backButtonArrow: {
-    color: "#1f6feb",
-    fontSize: 20,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-  backButtonText: {
-    color: "#102a43",
-    fontSize: 14,
-    fontWeight: "700",
   },
   title: {
     color: "#102a43",

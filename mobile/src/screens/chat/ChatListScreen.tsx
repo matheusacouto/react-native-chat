@@ -1,15 +1,16 @@
-import { AuthContext } from "@/src/contexts/AuthContext";
 import { UserModel } from "@/src/models/user";
 import { startConversation } from "@/src/services/api/chat.service";
 import { getUsers } from "@/src/services/api/users.service";
 import { getIdToken } from "@/src/services/firebase/auth";
 import { router } from "expo-router";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "@/src/hooks/useAuth";
+import { BackButton } from "@/src/components/BackButton";
 
 export default function ChatListScreen() {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
 
   const [users, setUsers] = useState<UserModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,10 +50,7 @@ export default function ChatListScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backButtonArrow}>‹</Text>
-            <Text style={styles.backButtonText}>Voltar</Text>
-          </Pressable>
+          <BackButton onPress={() => router.back()} style={styles.backButton} />
           <Text style={styles.title}>Chat</Text>
         </View>
         <Text style={styles.message}>Carregando usuários...</Text>
@@ -62,10 +60,7 @@ export default function ChatListScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonArrow}>‹</Text>
-          <Text style={styles.backButtonText}>Voltar</Text>
-        </Pressable>
+        <BackButton onPress={() => router.back()} style={styles.backButton} />
         <Text style={styles.title}>Chat</Text>
       </View>
 
@@ -100,33 +95,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   backButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#ffffff",
-    borderColor: "#d9e2ec",
-    borderRadius: 12,
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
     marginBottom: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
     shadowColor: "#102a43",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
     shadowRadius: 10,
     elevation: 2,
-  },
-  backButtonArrow: {
-    color: "#1f6feb",
-    fontSize: 20,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-  backButtonText: {
-    color: "#102a43",
-    fontSize: 14,
-    fontWeight: "700",
   },
   title: {
     color: "#102a43",

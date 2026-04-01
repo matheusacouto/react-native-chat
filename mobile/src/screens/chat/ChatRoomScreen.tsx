@@ -1,8 +1,6 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Alert,
   FlatList,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -16,12 +14,14 @@ import {
 } from "@/src/services/api/chat.service";
 import { MessageModel } from "@/src/models/message";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AuthContext } from "@/src/contexts/AuthContext";
-import { useConnectivity } from "@/src/contexts/ConnectivityContext";
+import { useAuth } from "@/src/hooks/useAuth";
+import { useRequireInternet } from "@/src/hooks/useRequireInternet";
+import { BackButton } from "@/src/components/BackButton";
+import { AppButton } from "@/src/components/AppButton";
 
 export default function ChatRoomScreen() {
-  const { user } = useContext(AuthContext);
-  const { isOnline } = useConnectivity();
+  const { user } = useAuth();
+  const requireInternet = useRequireInternet("Conecte-se para enviar mensagens.");
 
   const { conversationId, targetUserId } = useLocalSearchParams<{
     conversationId: string;
@@ -54,8 +54,7 @@ export default function ChatRoomScreen() {
       return;
     }
 
-    if (!isOnline) {
-      Alert.alert("Sem internet", "Conecte-se para enviar mensagens.");
+    if (!requireInternet()) {
       return;
     }
 
@@ -69,10 +68,7 @@ export default function ChatRoomScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backButtonArrow}>‹</Text>
-            <Text style={styles.backButtonText}>Voltar</Text>
-          </Pressable>
+          <BackButton onPress={() => router.back()} style={styles.backButton} />
           <Text style={styles.title}>Conversa</Text>
         </View>
         <Text style={styles.message}>Carregando mensagens...</Text>
@@ -83,10 +79,7 @@ export default function ChatRoomScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonArrow}>‹</Text>
-          <Text style={styles.backButtonText}>Voltar</Text>
-        </Pressable>
+        <BackButton onPress={() => router.back()} style={styles.backButton} />
         <Text style={styles.title}>Conversa</Text>
       </View>
 
@@ -121,9 +114,11 @@ export default function ChatRoomScreen() {
           placeholder="Digite sua mensagem"
           style={styles.input}
         />
-        <Pressable onPress={handleSendMessage} style={styles.sendButton}>
-          <Text style={styles.sendButtonText}>Enviar</Text>
-        </Pressable>
+        <AppButton
+          title="Enviar"
+          onPress={handleSendMessage}
+          style={styles.sendButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -139,33 +134,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   backButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#ffffff",
-    borderColor: "#d9e2ec",
-    borderRadius: 12,
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
     marginBottom: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
     shadowColor: "#102a43",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
     shadowRadius: 10,
     elevation: 2,
-  },
-  backButtonArrow: {
-    color: "#1f6feb",
-    fontSize: 20,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-  backButtonText: {
-    color: "#102a43",
-    fontSize: 14,
-    fontWeight: "700",
   },
   title: {
     color: "#102a43",
@@ -220,13 +194,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   sendButton: {
-    backgroundColor: "#1f6feb",
-    borderRadius: 14,
     paddingHorizontal: 18,
-    paddingVertical: 14,
-  },
-  sendButtonText: {
-    color: "#ffffff",
-    fontWeight: "700",
+    paddingVertical: 0,
   },
 });

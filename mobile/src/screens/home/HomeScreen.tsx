@@ -1,22 +1,36 @@
-import { AuthContext } from "@/src/contexts/AuthContext";
 import { Redirect, router } from "expo-router";
-import { useContext } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "@/src/hooks/useAuth";
+import { AppButton } from "@/src/components/AppButton";
+import { useAppParameters } from "@/src/hooks/useAppParameters";
 
 export default function HomeScreen() {
-  const { user, signOut, isAuthenticated } = useContext(AuthContext);
+  const { user, signOut, isAuthenticated } = useAuth();
+  const { parameters, parameterMap, isLoading } = useAppParameters();
 
   if (!isAuthenticated) {
     return <Redirect href="/login" />;
   }
 
+  const homeTitle = parameterMap.home_title ?? "Home";
+  const homeSubtitle =
+    parameterMap.home_subtitle ?? "Você entrou com sucesso no app.";
+  const appNotice = parameterMap.home_notice;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Home</Text>
-        <Text style={styles.subtitle}>Você entrou com sucesso no app.</Text>
+        <Text style={styles.title}>{homeTitle}</Text>
+        <Text style={styles.subtitle}>{homeSubtitle}</Text>
       </View>
+
+      {appNotice ? (
+        <View style={styles.noticeCard}>
+          <Text style={styles.noticeTitle}>Aviso do app</Text>
+          <Text style={styles.noticeText}>{appNotice}</Text>
+        </View>
+      ) : null}
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Usuário autenticado</Text>
@@ -30,42 +44,64 @@ export default function HomeScreen() {
         <Text style={styles.uid}>{user?.firebase_uid ?? "Não informado"}</Text>
       </View>
 
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Parâmetros ativos do app</Text>
+        {isLoading ? (
+          <Text style={styles.emptyState}>Carregando parâmetros...</Text>
+        ) : parameters.length ? (
+          parameters.map((parameter) => (
+            <View key={parameter.id} style={styles.parameterRow}>
+              <Text style={styles.label}>{parameter.chave}</Text>
+              <Text style={styles.value}>{parameter.valor}</Text>
+              {parameter.descricao ? (
+                <Text style={styles.parameterDescription}>
+                  {parameter.descricao}
+                </Text>
+              ) : null}
+            </View>
+          ))
+        ) : (
+          <Text style={styles.emptyState}>
+            Nenhum parâmetro ativo encontrado.
+          </Text>
+        )}
+      </View>
+
       <View style={styles.actions}>
-        <Pressable
-          style={styles.secondaryButton}
+        <AppButton
+          title="Notificações"
+          variant="secondary"
           onPress={() => router.push("/notification")}
-        >
-          <Text style={styles.secondaryButtonText}>Notificações</Text>
-        </Pressable>
-
-        <Pressable
           style={styles.secondaryButton}
+        />
+
+        <AppButton
+          title="Enviar Notificação Global"
+          variant="secondary"
           onPress={() => router.push("/global-notification-form")}
-        >
-          <Text style={styles.secondaryButtonText}>
-            Enviar Notificação Global
-          </Text>
-        </Pressable>
-
-        <Pressable
           style={styles.secondaryButton}
+        />
+
+        <AppButton
+          title="Enviar Notificação Individual"
+          variant="secondary"
           onPress={() => router.push("/individual-notification-form")}
-        >
-          <Text style={styles.secondaryButtonText}>
-            Enviar Notificação Individual
-          </Text>
-        </Pressable>
-
-        <Pressable
           style={styles.secondaryButton}
-          onPress={() => router.push("/chat")}
-        >
-          <Text style={styles.secondaryButtonText}>Chat</Text>
-        </Pressable>
+        />
 
-        <Pressable onPress={signOut} style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>Sair</Text>
-        </Pressable>
+        <AppButton
+          title="Chat"
+          variant="secondary"
+          onPress={() => router.push("/chat")}
+          style={styles.secondaryButton}
+        />
+
+        <AppButton
+          title="Sair"
+          variant="danger"
+          onPress={signOut}
+          style={styles.primaryButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -90,6 +126,25 @@ const styles = StyleSheet.create({
     color: "#486581",
     fontSize: 15,
     lineHeight: 22,
+  },
+  noticeCard: {
+    backgroundColor: "#e8f1ff",
+    borderColor: "#bfd4f6",
+    borderRadius: 18,
+    borderWidth: 1,
+    marginBottom: 20,
+    padding: 18,
+  },
+  noticeTitle: {
+    color: "#1f3a5f",
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+  noticeText: {
+    color: "#355070",
+    fontSize: 14,
+    lineHeight: 21,
   },
   card: {
     backgroundColor: "#ffffff",
@@ -125,31 +180,27 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 4,
   },
+  parameterRow: {
+    marginTop: 10,
+  },
+  parameterDescription: {
+    color: "#7b8794",
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 4,
+  },
+  emptyState: {
+    color: "#486581",
+    fontSize: 14,
+    lineHeight: 21,
+  },
   actions: {
     gap: 12,
   },
   secondaryButton: {
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderColor: "#d9e2ec",
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingVertical: 16,
-  },
-  secondaryButtonText: {
-    color: "#102a43",
-    fontSize: 16,
-    fontWeight: "600",
+    paddingVertical: 0,
   },
   primaryButton: {
-    alignItems: "center",
-    backgroundColor: "#d64545",
-    borderRadius: 14,
-    paddingVertical: 16,
-  },
-  primaryButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
+    paddingVertical: 0,
   },
 });

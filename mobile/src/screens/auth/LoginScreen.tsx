@@ -1,9 +1,5 @@
-import { AuthContext } from "@/src/contexts/AuthContext";
-import { useConnectivity } from "@/src/contexts/ConnectivityContext";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -12,13 +8,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
+import { useAuth } from "@/src/hooks/useAuth";
+import { useRequireInternet } from "@/src/hooks/useRequireInternet";
+import { AppButton } from "@/src/components/AppButton";
 
 import { Redirect, router } from "expo-router";
 
 export default function LoginScreen() {
-  const { signIn, signInWithGoogle, isLoading, isAuthenticated } =
-    useContext(AuthContext);
-  const { isOnline } = useConnectivity();
+  const { signIn, signInWithGoogle, isLoading, isAuthenticated } = useAuth();
+  const requireInternet = useRequireInternet();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,17 +25,8 @@ export default function LoginScreen() {
     return <Redirect href="/home" />;
   }
 
-  function canProceedWithOnlineAction() {
-    if (isOnline) {
-      return true;
-    }
-
-    Alert.alert("Sem internet", "Conecte-se para continuar.");
-    return false;
-  }
-
   async function handleLogin() {
-    if (!canProceedWithOnlineAction()) {
+    if (!requireInternet()) {
       return;
     }
 
@@ -46,7 +35,7 @@ export default function LoginScreen() {
   }
 
   async function handleGoogleLogin() {
-    if (!canProceedWithOnlineAction()) {
+    if (!requireInternet()) {
       return;
     }
 
@@ -80,21 +69,16 @@ export default function LoginScreen() {
             style={styles.input}
             value={password}
           />
-          <Pressable
-            disabled={isLoading}
+          <AppButton
+            title="Entrar"
             onPress={handleLogin}
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.buttonText}>Entrar</Text>
-            )}
-          </Pressable>
+            loading={isLoading}
+            style={styles.button}
+          />
 
           <View style={styles.googleButtonWrapper}>
             <GoogleSigninButton
-              style={[styles.googleButton, isLoading && styles.buttonDisabled]}
+              style={styles.googleButton}
               onPress={handleGoogleLogin}
               disabled={isLoading}
             />
@@ -160,14 +144,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginTop: 8,
     paddingVertical: 16,
-  },
-  buttonDisabled: {
-    opacity: 0.75,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
   },
   googleButton: {
     alignSelf: "center",

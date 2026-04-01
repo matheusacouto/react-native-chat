@@ -1,16 +1,10 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { resetPassword } from "@/src/services/firebase/auth";
+import { BackButton } from "@/src/components/BackButton";
+import { AppButton } from "@/src/components/AppButton";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
@@ -49,10 +43,7 @@ export default function ForgotPasswordScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonArrow}>‹</Text>
-          <Text style={styles.backButtonText}>Voltar</Text>
-        </Pressable>
+        <BackButton onPress={() => router.back()} style={styles.backButton} />
 
         <Text style={styles.title}>Recuperar senha</Text>
         <Text style={styles.subtitle}>
@@ -70,17 +61,12 @@ export default function ForgotPasswordScreen() {
             value={email}
           />
 
-          <Pressable
-            disabled={isLoading}
+          <AppButton
+            title="Enviar link"
             onPress={handleResetPassword}
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.buttonText}>Enviar link</Text>
-            )}
-          </Pressable>
+            loading={isLoading}
+            style={styles.button}
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -105,28 +91,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   backButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#ffffff",
-    borderColor: "#d9e2ec",
-    borderRadius: 12,
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
     marginBottom: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  backButtonArrow: {
-    color: "#1f6feb",
-    fontSize: 20,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-  backButtonText: {
-    color: "#102a43",
-    fontSize: 14,
-    fontWeight: "700",
   },
   title: {
     color: "#102a43",
@@ -159,13 +124,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginTop: 8,
     paddingVertical: 16,
-  },
-  buttonDisabled: {
-    opacity: 0.75,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
   },
 });
