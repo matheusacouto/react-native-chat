@@ -6,7 +6,9 @@ import {
   GoogleAuthProvider,
   signInWithCredential,
   signOut,
+  onAuthStateChanged,
 } from "firebase/auth";
+
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 import { firebaseApp } from "./firebaseConfig";
@@ -65,4 +67,10 @@ export async function getIdToken() {
   }
 
   return user.getIdToken();
+}
+
+export function onFirebaseAuthStateChanged(
+  callback: (user: typeof auth.currentUser) => void,
+) {
+  return onAuthStateChanged(auth, callback);
 }
