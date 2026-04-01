@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { getIdToken } from "@/src/services/firebase/auth";
 import {
   getNotifications,
@@ -8,14 +8,20 @@ import {
 import { NotificationItem } from "@/src/models/notification";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { useConnectivity } from "@/src/contexts/ConnectivityContext";
 
 export default function NotificationsScreen() {
+  const { isOnline } = useConnectivity();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadNotifications() {
       try {
+        if (!isOnline) {
+          return;
+        }
+
         const idToken = await getIdToken();
 
         if (!idToken) {
@@ -48,6 +54,11 @@ export default function NotificationsScreen() {
   }
 
   async function handlePressNotification(item: NotificationItem) {
+    if (!isOnline) {
+      Alert.alert("Sem internet", "Conecte-se para abrir notificações.");
+      return;
+    }
+
     const idToken = await getIdToken();
 
     if (!idToken) {
@@ -70,19 +81,6 @@ export default function NotificationsScreen() {
     if (item.notificacao.rota_destino) {
       router.push(item.notificacao.rota_destino as never);
     }
-  }
-
-  async function handleMarkAsRead(idToken: string, recipientId: number) {
-    const updatedNotification = await markNotificationAsRead(
-      recipientId,
-      idToken,
-    );
-
-    setNotifications((current) =>
-      current.map((item) =>
-        item.id === recipientId ? updatedNotification : item,
-      ),
-    );
   }
 
   return (
