@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "62212837130",
+    "project_id": "react-native-chat-76724",
+    "storage_bucket": "react-native-chat-76724.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:62212837130:android:0b1d4b13239e673b3df4f3",
+        "android_client_info": {
+          "package_name": "com.matheus.rnchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "62212837130-14hv58eirsh65rk1p7shulo55lsisjhr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.matheus.rnchat",
+            "certificate_hash": "95aec40b3aa9c554caf8d05bdd14604bdb6b0ee5"
+          }
+        },
+        {
+          "client_id": "62212837130-qn910hc18a4q7u93fkreunqbs6gtsglj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjbeVIqFaHVW9_7bmnbbGk7K1d4Yjwi_Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "62212837130-qn910hc18a4q7u93fkreunqbs6gtsglj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

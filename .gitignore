@@ -86,7 +86,6 @@ lerna-debug.log*
 .env.local
 
 # Firebase client config (local real files)
-mobile/google-services.json
 mobile/src/services/firebase/firebaseConfig.ts
 mobile/.env
 
