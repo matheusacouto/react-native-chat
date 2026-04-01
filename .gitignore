@@ -85,6 +85,11 @@ lerna-debug.log*
 .env.production.local
 .env.local
 
+# Firebase client config (local real files)
+mobile/google-services.json
+mobile/src/services/firebase/firebaseConfig.ts
+mobile/.env
+
 # temp directory
 .temp
 .tmp
