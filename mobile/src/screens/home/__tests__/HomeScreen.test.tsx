@@ -71,16 +71,15 @@ describe("HomeScreen", () => {
       parameterMap: {
         home_title: "Central do Chat",
         home_subtitle: "Subtítulo personalizado",
-        home_notice: "Aviso vindo da API",
       },
       isLoading: false,
     });
 
-    const { getAllByText, getByText } = render(<HomeScreen />);
+    const { getByText, queryByText } = render(<HomeScreen />);
 
-    expect(getAllByText("Central do Chat")).toHaveLength(2);
+    expect(getByText("Central do Chat")).toBeTruthy();
     expect(getByText("Subtítulo personalizado")).toBeTruthy();
-    expect(getByText("Aviso vindo da API")).toBeTruthy();
+    expect(queryByText("Aviso vindo da API")).toBeNull();
   });
 
   it("navigates to notifications when pressing the notifications button", () => {
@@ -89,6 +88,30 @@ describe("HomeScreen", () => {
     fireEvent.press(getByText("Notificações"));
 
     expect(mockRouter.push).toHaveBeenCalledWith("/notification");
+  });
+
+  it("navigates to the global notification form", () => {
+    const { getByText } = render(<HomeScreen />);
+
+    fireEvent.press(getByText("Enviar Notificação Global"));
+
+    expect(mockRouter.push).toHaveBeenCalledWith("/global-notification-form");
+  });
+
+  it("navigates to the individual notification form", () => {
+    const { getByText } = render(<HomeScreen />);
+
+    fireEvent.press(getByText("Enviar Notificação Individual"));
+
+    expect(mockRouter.push).toHaveBeenCalledWith("/individual-notification-form");
+  });
+
+  it("navigates to chat when pressing the chat button", () => {
+    const { getByText } = render(<HomeScreen />);
+
+    fireEvent.press(getByText("Chat"));
+
+    expect(mockRouter.push).toHaveBeenCalledWith("/chat");
   });
 
   it("calls signOut when pressing the exit button", () => {

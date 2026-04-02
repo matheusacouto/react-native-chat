@@ -1,108 +1,87 @@
 import { Redirect, router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/src/hooks/useAuth";
 import { AppButton } from "@/src/components/AppButton";
 import { useAppParameters } from "@/src/hooks/useAppParameters";
+import { AppLoadingScreen } from "@/src/components/AppLoadingScreen";
 
 export default function HomeScreen() {
   const { user, signOut, isAuthenticated } = useAuth();
-  const { parameters, parameterMap, isLoading } = useAppParameters();
+  const { parameterMap, isLoading } = useAppParameters();
 
   if (!isAuthenticated) {
     return <Redirect href="/login" />;
   }
 
-  const homeTitle = parameterMap.home_title ?? "Home";
-  const homeSubtitle =
-    parameterMap.home_subtitle ?? "Você entrou com sucesso no app.";
+  if (isLoading) {
+    return (
+      <AppLoadingScreen
+        title="Carregando home"
+        message="Buscando parâmetros e informações do aplicativo."
+      />
+    );
+  }
+
+  const homeTitle = parameterMap.home_title;
+  const homeSubtitle = parameterMap.home_subtitle;
   const appNotice = parameterMap.home_notice;
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{homeTitle}</Text>
-        <Text style={styles.subtitle}>{homeSubtitle}</Text>
-      </View>
-
-      {appNotice ? (
-        <View style={styles.noticeCard}>
-          <Text style={styles.noticeTitle}>Aviso do app</Text>
-          <Text style={styles.noticeText}>{appNotice}</Text>
+      <ScrollView>
+        <View style={styles.header}>
+          <Text style={styles.title}>{homeTitle}</Text>
+          <Text style={styles.subtitle}>{homeSubtitle}</Text>
         </View>
-      ) : null}
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Usuário autenticado</Text>
-        <Text style={styles.label}>Nome</Text>
-        <Text style={styles.value}>{user?.nome ?? "Não informado"}</Text>
+        {appNotice ? (
+          <View style={styles.noticeCard}>
+            <Text style={styles.noticeTitle}>Aviso do app</Text>
+            <Text style={styles.noticeText}>{appNotice}</Text>
+          </View>
+        ) : null}
 
-        <Text style={styles.label}>E-mail</Text>
-        <Text style={styles.value}>{user?.email ?? "Não informado"}</Text>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Usuário autenticado</Text>
+          <Text style={styles.label}>Nome</Text>
+          <Text style={styles.value}>{user?.nome}</Text>
 
-        <Text style={styles.label}>Firebase UID</Text>
-        <Text style={styles.uid}>{user?.firebase_uid ?? "Não informado"}</Text>
-      </View>
+          <Text style={styles.label}>E-mail</Text>
+          <Text style={styles.value}>{user?.email}</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Parâmetros ativos do app</Text>
-        {isLoading ? (
-          <Text style={styles.emptyState}>Carregando parâmetros...</Text>
-        ) : parameters.length ? (
-          parameters.map((parameter) => (
-            <View key={parameter.id} style={styles.parameterRow}>
-              <Text style={styles.label}>{parameter.chave}</Text>
-              <Text style={styles.value}>{parameter.valor}</Text>
-              {parameter.descricao ? (
-                <Text style={styles.parameterDescription}>
-                  {parameter.descricao}
-                </Text>
-              ) : null}
-            </View>
-          ))
-        ) : (
-          <Text style={styles.emptyState}>
-            Nenhum parâmetro ativo encontrado.
-          </Text>
-        )}
-      </View>
+          <Text style={styles.label}>Firebase UID</Text>
+          <Text style={styles.uid}>{user?.firebase_uid}</Text>
+        </View>
 
-      <View style={styles.actions}>
-        <AppButton
-          title="Notificações"
-          variant="secondary"
-          onPress={() => router.push("/notification")}
-          style={styles.secondaryButton}
-        />
+        <View style={styles.actions}>
+          <AppButton
+            title="Notificações"
+            variant="secondary"
+            onPress={() => router.push("/notification")}
+          />
 
-        <AppButton
-          title="Enviar Notificação Global"
-          variant="secondary"
-          onPress={() => router.push("/global-notification-form")}
-          style={styles.secondaryButton}
-        />
+          <AppButton
+            title="Enviar Notificação Global"
+            variant="secondary"
+            onPress={() => router.push("/global-notification-form")}
+          />
 
-        <AppButton
-          title="Enviar Notificação Individual"
-          variant="secondary"
-          onPress={() => router.push("/individual-notification-form")}
-          style={styles.secondaryButton}
-        />
+          <AppButton
+            title="Enviar Notificação Individual"
+            variant="secondary"
+            onPress={() => router.push("/individual-notification-form")}
+          />
 
-        <AppButton
-          title="Chat"
-          variant="secondary"
-          onPress={() => router.push("/chat")}
-          style={styles.secondaryButton}
-        />
+          <AppButton
+            title="Chat"
+            variant="secondary"
+            onPress={() => router.push("/chat")}
+          />
 
-        <AppButton
-          title="Sair"
-          variant="danger"
-          onPress={signOut}
-          style={styles.primaryButton}
-        />
-      </View>
+          <AppButton title="Sair" variant="danger" onPress={signOut} />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
