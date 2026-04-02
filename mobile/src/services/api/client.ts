@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const API = axios.create({
-  baseURL: "http://10.3.152.11:3000",
+  baseURL: `${process.env.EXPO_PUBLIC_API_URL}`,
 });
 
 let onSessionExpired: (() => Promise<void>) | null = null;
