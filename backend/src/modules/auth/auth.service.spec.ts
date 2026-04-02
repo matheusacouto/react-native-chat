@@ -8,7 +8,9 @@ import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
   let authService: AuthService;
-  let usersService: jest.Mocked<Pick<UsersService, 'findByFirebaseUid'>>;
+  let usersService: jest.Mocked<
+    Pick<UsersService, 'findByFirebaseUid' | 'updateLastLogin'>
+  >;
   let firebaseService: jest.Mocked<Pick<FirebaseAuthService, 'verifyIdToken'>>;
 
   const firebaseServiceMock = {
@@ -17,6 +19,7 @@ describe('AuthService', () => {
 
   const usersServiceMock = {
     findByFirebaseUid: jest.fn(),
+    updateLastLogin: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -70,11 +73,15 @@ describe('AuthService', () => {
 
       const result = await authService.loginWithFirebase(idToken);
 
-      expect(result).toEqual(user);
+      expect(result).toEqual({
+        ...user,
+        ultimo_login_em: expect.any(Date),
+      });
       expect(firebaseService.verifyIdToken).toHaveBeenCalledWith(idToken);
       expect(firebaseService.verifyIdToken).toHaveBeenCalledTimes(1);
       expect(usersService.findByFirebaseUid).toHaveBeenCalledWith(firebaseUid);
       expect(usersService.findByFirebaseUid).toHaveBeenCalledTimes(1);
+      expect(usersService.updateLastLogin).toHaveBeenCalledWith(user.id);
     });
 
     it('should throw a NotFoundException error when user doesnt exist on database', async () => {
@@ -93,6 +100,7 @@ describe('AuthService', () => {
 
       expect(firebaseService.verifyIdToken).toHaveBeenCalledWith(idToken);
       expect(usersService.findByFirebaseUid).toHaveBeenCalledWith(firebaseUid);
+      expect(usersService.updateLastLogin).not.toHaveBeenCalled();
     });
 
     it('should throw an error when token is invalid', async () => {
@@ -107,6 +115,7 @@ describe('AuthService', () => {
 
       expect(firebaseService.verifyIdToken).toHaveBeenCalledWith(idToken);
       expect(usersService.findByFirebaseUid).not.toHaveBeenCalled();
+      expect(usersService.updateLastLogin).not.toHaveBeenCalled();
     });
   });
 });

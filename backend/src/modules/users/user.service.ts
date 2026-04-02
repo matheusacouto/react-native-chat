@@ -41,4 +41,10 @@ export class UsersService {
     const user = this.usersRepository.create(data);
     return this.usersRepository.save(user);
   }
+
+  async updateLastLogin(userId: number): Promise<void> {
+    await this.usersRepository.update(userId, {
+      ultimo_login_em: new Date(),
+    });
+  }
 }

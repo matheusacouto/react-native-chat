@@ -18,7 +18,12 @@ export class AuthService {
     const user = await this.usersService.findByFirebaseUid(firebaseUid);
 
     if (user) {
-      return user;
+      await this.usersService.updateLastLogin(user.id);
+
+      return {
+        ...user,
+        ultimo_login_em: new Date(),
+      };
     }
 
     if (provider === 'google.com') {

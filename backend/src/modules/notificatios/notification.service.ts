@@ -203,6 +203,7 @@ export class NotificationsService {
     const tokens = await this.pushService.findActiveTokensByUserIds(userIds);
 
     if (!tokens.length) {
+      console.log('Nenhum push token encontrado para os usuários', { userIds });
       return false;
     }
 
