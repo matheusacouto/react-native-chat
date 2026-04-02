@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    marginBottom: 10,
+    marginBottom: 5,
   },
   errorContainer: {
     backgroundColor: "#fff1f1",
