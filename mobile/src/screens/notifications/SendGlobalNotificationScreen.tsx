@@ -8,7 +8,6 @@ import { useRequireInternet } from "@/src/hooks/useRequireInternet";
 import { BackButton } from "@/src/components/BackButton";
 import { NotificationFormFields } from "@/src/components/notifications/NotificationFormFields";
 import { AppButton } from "@/src/components/AppButton";
-import { buildNotificationPayload } from "@/src/utils/notificationPayload";
 
 export default function SendGlobalNotificationScreen() {
   const requireInternet = useRequireInternet();
@@ -17,7 +16,6 @@ export default function SendGlobalNotificationScreen() {
   const [description, setDescription] = useState("");
   const [destinationRoute, setDestinationRoute] = useState("");
   const [icon, setIcon] = useState("");
-  const [payload, setPayload] = useState("");
 
   async function handleSendNotification() {
     if (!requireInternet()) {
@@ -41,7 +39,7 @@ export default function SendGlobalNotificationScreen() {
       description,
       icon: icon || null,
       destinationRoute: destinationRoute || null,
-      payload: buildNotificationPayload(payload),
+      payload: null,
     });
 
     Alert.alert("Sucesso", "Notificação global enviada.");
@@ -62,12 +60,10 @@ export default function SendGlobalNotificationScreen() {
         description={description}
         destinationRoute={destinationRoute}
         icon={icon}
-        payload={payload}
         onChangeTitle={setTitle}
         onChangeDescription={setDescription}
         onChangeDestinationRoute={setDestinationRoute}
         onChangeIcon={setIcon}
-        onChangePayload={setPayload}
       />
 
       <AppButton

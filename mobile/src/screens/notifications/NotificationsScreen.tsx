@@ -10,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useRequireInternet } from "@/src/hooks/useRequireInternet";
 import { BackButton } from "@/src/components/BackButton";
+import { AppLoadingScreen } from "@/src/components/AppLoadingScreen";
 
 export default function NotificationsScreen() {
   const requireInternet = useRequireInternet();
@@ -41,13 +42,10 @@ export default function NotificationsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <BackButton onPress={() => router.back()} style={styles.backButton} />
-          <Text style={styles.title}>Notificações</Text>
-        </View>
-        <Text style={styles.message}>Carregando...</Text>
-      </SafeAreaView>
+      <AppLoadingScreen
+        title="Carregando notificações"
+        message="Buscando seus avisos mais recentes."
+      />
     );
   }
 

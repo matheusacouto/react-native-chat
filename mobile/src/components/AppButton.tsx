@@ -24,7 +24,7 @@ export function AppButton({
   disabled = false,
   loading = false,
   variant = "primary",
-  style,
+  style = { paddingVertical: 10 },
 }: AppButtonProps) {
   const isDisabled = disabled || loading;
 
@@ -47,10 +47,7 @@ export function AppButton({
         />
       ) : (
         <Text
-          style={[
-            styles.text,
-            variant === "secondary" && styles.secondaryText,
-          ]}
+          style={[styles.text, variant === "secondary" && styles.secondaryText]}
         >
           {title}
         </Text>

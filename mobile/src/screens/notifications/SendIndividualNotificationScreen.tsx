@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import {
   Alert,
-  FlatList,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
-  Pressable,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -17,35 +18,38 @@ import { useRequireInternet } from "@/src/hooks/useRequireInternet";
 import { BackButton } from "@/src/components/BackButton";
 import { NotificationFormFields } from "@/src/components/notifications/NotificationFormFields";
 import { AppButton } from "@/src/components/AppButton";
-import { buildNotificationPayload } from "@/src/utils/notificationPayload";
 
 export default function SendIndividualNotificationScreen() {
   const { user } = useAuth();
   const requireInternet = useRequireInternet();
 
   const [users, setUsers] = useState<UserModel[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [destinationRoute, setDestinationRoute] = useState("");
   const [icon, setIcon] = useState("");
-  const [payload, setPayload] = useState("");
 
   useEffect(() => {
     async function loadUsers() {
-      if (!requireInternet("Conecte-se para carregar usuários.")) {
-        return;
+      try {
+        if (!requireInternet("Conecte-se para carregar usuários.")) {
+          return;
+        }
+
+        const idToken = await getIdToken();
+
+        if (!idToken) {
+          return;
+        }
+
+        const data: UserModel[] = await getUsers(idToken);
+        setUsers(data.filter((item) => item.id !== user?.id));
+      } finally {
+        setIsLoadingUsers(false);
       }
-
-      const idToken = await getIdToken();
-
-      if (!idToken) {
-        return;
-      }
-
-      const data: UserModel[] = await getUsers(idToken);
-      setUsers(data.filter((item) => item.id !== user?.id));
     }
 
     loadUsers();
@@ -79,7 +83,7 @@ export default function SendIndividualNotificationScreen() {
       recipientId: selectedUserId,
       icon: icon || null,
       destinationRoute: destinationRoute || null,
-      payload: buildNotificationPayload(payload),
+      payload: null,
     });
 
     Alert.alert("Sucesso", "Notificação individual enviada.");
@@ -95,43 +99,57 @@ export default function SendIndividualNotificationScreen() {
         Selecione um usuário e envie a notificação.
       </Text>
 
-      <FlatList
-        data={users}
-        keyExtractor={(item) => String(item.id)}
-        horizontal
-        contentContainerStyle={styles.userList}
-        renderItem={({ item }) => {
-          const isSelected = selectedUserId === item.id;
+      <Text style={styles.userLabel}>Destinatário</Text>
 
-          return (
-            <Pressable
-              onPress={() => setSelectedUserId(item.id)}
-              style={[styles.userChip, isSelected && styles.userChipSelected]}
-            >
-              <Text
-                style={[
-                  styles.userChipText,
-                  isSelected && styles.userChipTextSelected,
-                ]}
-              >
-                {item.nome ?? item.email}
-              </Text>
-            </Pressable>
-          );
-        }}
-      />
+      <View style={styles.userListContainer}>
+        {isLoadingUsers ? (
+          <Text style={styles.helperText}>Carregando usuários...</Text>
+        ) : users.length === 0 ? (
+          <Text style={styles.helperText}>
+            Nenhum destinatário disponível no momento.
+          </Text>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.userList}
+          >
+            {users.map((item) => {
+              const isSelected = selectedUserId === item.id;
+
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => setSelectedUserId(item.id)}
+                  style={[
+                    styles.userChip,
+                    isSelected && styles.userChipSelected,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.userChipText,
+                      isSelected && styles.userChipTextSelected,
+                    ]}
+                  >
+                    {item.nome ?? item.email}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
+      </View>
 
       <NotificationFormFields
         title={title}
         description={description}
         destinationRoute={destinationRoute}
         icon={icon}
-        payload={payload}
         onChangeTitle={setTitle}
         onChangeDescription={setDescription}
         onChangeDestinationRoute={setDestinationRoute}
         onChangeIcon={setIcon}
-        onChangePayload={setPayload}
       />
 
       <AppButton
@@ -164,10 +182,19 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 20,
   },
+  userLabel: {
+    color: "#102a43",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
   userList: {
     gap: 10,
-    marginBottom: 20,
     paddingRight: 12,
+  },
+  userListContainer: {
+    justifyContent: "center",
+    marginBottom: 12,
   },
   userChip: {
     backgroundColor: "#ffffff",
@@ -187,6 +214,15 @@ const styles = StyleSheet.create({
   },
   userChipTextSelected: {
     color: "#ffffff",
+  },
+  selectedUserText: {
+    color: "#486581",
+    fontSize: 14,
+    marginBottom: 20,
+  },
+  helperText: {
+    color: "#486581",
+    fontSize: 14,
   },
   button: {
     alignItems: "center",
