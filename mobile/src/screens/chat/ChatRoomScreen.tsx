@@ -20,6 +20,8 @@ import { useRequireInternet } from "@/src/hooks/useRequireInternet";
 import { BackButton } from "@/src/components/BackButton";
 import { AppButton } from "@/src/components/AppButton";
 import { AppLoadingScreen } from "@/src/components/AppLoadingScreen";
+import { AppFeedback } from "@/src/components/AppFeedback";
+import { getUserFriendlyErrorMessage } from "@/src/utils/errorMessages";
 
 export default function ChatRoomScreen() {
   const { user } = useAuth();
@@ -37,6 +39,8 @@ export default function ChatRoomScreen() {
   const [messages, setMessages] = useState<MessageModel[]>([]);
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   const conversationTitle =
     typeof targetUserName === "string" && targetUserName.length > 0
@@ -51,6 +55,14 @@ export default function ChatRoomScreen() {
 
       const data = await getConversationMessages(Number(conversationId));
       setMessages(data);
+      setErrorMessage("");
+    } catch (error) {
+      setErrorMessage(
+        getUserFriendlyErrorMessage(
+          error,
+          "Não foi possível carregar as mensagens agora.",
+        ),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -75,6 +87,7 @@ export default function ChatRoomScreen() {
 
   async function handleSendMessage() {
     if (!user || !targetUserId || !text.trim()) {
+      setErrorMessage("Digite uma mensagem antes de enviar.");
       return;
     }
 
@@ -82,10 +95,23 @@ export default function ChatRoomScreen() {
       return;
     }
 
-    const newMessage = await sendMessage(user.id, Number(targetUserId), text);
+    setIsSending(true);
+    setErrorMessage("");
 
-    setMessages((current) => [...current, newMessage]);
-    setText("");
+    try {
+      const newMessage = await sendMessage(user.id, Number(targetUserId), text);
+      setMessages((current) => [...current, newMessage]);
+      setText("");
+    } catch (error) {
+      setErrorMessage(
+        getUserFriendlyErrorMessage(
+          error,
+          "Não foi possível enviar a mensagem agora.",
+        ),
+      );
+    } finally {
+      setIsSending(false);
+    }
   }
 
   if (isLoading) {
@@ -108,6 +134,8 @@ export default function ChatRoomScreen() {
           <BackButton onPress={() => router.back()} style={styles.backButton} />
           <Text style={styles.title}>{conversationTitle}</Text>
         </View>
+
+        {errorMessage ? <AppFeedback message={errorMessage} /> : null}
 
         <FlatList
           data={messages}
@@ -136,7 +164,12 @@ export default function ChatRoomScreen() {
         <View style={styles.inputContainer}>
           <TextInput
             value={text}
-            onChangeText={setText}
+            onChangeText={(value) => {
+              setText(value);
+              if (errorMessage) {
+                setErrorMessage("");
+              }
+            }}
             placeholder="Digite sua mensagem"
             placeholderTextColor="#808080"
             style={styles.input}
@@ -144,6 +177,7 @@ export default function ChatRoomScreen() {
           <AppButton
             title="Enviar"
             onPress={handleSendMessage}
+            loading={isSending}
             style={styles.sendButton}
           />
         </View>
@@ -180,6 +214,7 @@ const styles = StyleSheet.create({
   listContent: {
     gap: 12,
     paddingBottom: 16,
+    paddingTop: 12,
   },
   messageCard: {
     borderRadius: 16,

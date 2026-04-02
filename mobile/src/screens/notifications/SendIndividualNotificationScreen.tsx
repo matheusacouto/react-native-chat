@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { getIdToken } from "@/src/services/firebase/auth";
@@ -18,6 +11,8 @@ import { useRequireInternet } from "@/src/hooks/useRequireInternet";
 import { BackButton } from "@/src/components/BackButton";
 import { NotificationFormFields } from "@/src/components/notifications/NotificationFormFields";
 import { AppButton } from "@/src/components/AppButton";
+import { AppFeedback } from "@/src/components/AppFeedback";
+import { getUserFriendlyErrorMessage } from "@/src/utils/errorMessages";
 
 export default function SendIndividualNotificationScreen() {
   const { user } = useAuth();
@@ -31,6 +26,11 @@ export default function SendIndividualNotificationScreen() {
   const [description, setDescription] = useState("");
   const [destinationRoute, setDestinationRoute] = useState("");
   const [icon, setIcon] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    message: string;
+    variant: "error" | "success";
+  } | null>(null);
 
   useEffect(() => {
     async function loadUsers() {
@@ -47,6 +47,14 @@ export default function SendIndividualNotificationScreen() {
 
         const data: UserModel[] = await getUsers(idToken);
         setUsers(data.filter((item) => item.id !== user?.id));
+      } catch (error) {
+        setFeedback({
+          message: getUserFriendlyErrorMessage(
+            error,
+            "Não foi possível carregar os usuários agora.",
+          ),
+          variant: "error",
+        });
       } finally {
         setIsLoadingUsers(false);
       }
@@ -61,41 +69,71 @@ export default function SendIndividualNotificationScreen() {
     }
 
     if (!selectedUserId) {
-      Alert.alert("Destinatário obrigatório", "Selecione um usuário.");
+      setFeedback({
+        message: "Selecione um destinatário antes de enviar.",
+        variant: "error",
+      });
       return;
     }
 
     if (!title.trim() || !description.trim()) {
-      Alert.alert("Campos obrigatórios", "Preencha título e descrição.");
+      setFeedback({
+        message: "Preencha título e descrição antes de enviar.",
+        variant: "error",
+      });
       return;
     }
 
     if (!destinationRoute.trim()) {
-      Alert.alert(
-        "Rota obrigatória",
-        "Selecione uma rota de destino antes de enviar a notificação.",
-      );
+      setFeedback({
+        message: "Selecione uma rota de destino antes de enviar.",
+        variant: "error",
+      });
       return;
     }
 
-    const idToken = await getIdToken();
+    setFeedback(null);
+    setIsSubmitting(true);
 
-    if (!idToken) {
-      Alert.alert("Sessão inválida", "Faça login novamente.");
-      return;
+    try {
+      const idToken = await getIdToken();
+
+      if (!idToken) {
+        setFeedback({
+          message: "Sua sessão não é mais válida. Entre novamente.",
+          variant: "error",
+        });
+        return;
+      }
+
+      await sendIndividualNotification(idToken, {
+        title,
+        description,
+        recipientId: selectedUserId,
+        icon: icon || null,
+        destinationRoute: destinationRoute || null,
+        payload: null,
+      });
+
+      setFeedback({
+        message: "Notificação individual enviada com sucesso.",
+        variant: "success",
+      });
+
+      setTimeout(() => {
+        router.back();
+      }, 700);
+    } catch (error) {
+      setFeedback({
+        message: getUserFriendlyErrorMessage(
+          error,
+          "Não foi possível enviar a notificação individual agora.",
+        ),
+        variant: "error",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-
-    await sendIndividualNotification(idToken, {
-      title,
-      description,
-      recipientId: selectedUserId,
-      icon: icon || null,
-      destinationRoute: destinationRoute || null,
-      payload: null,
-    });
-
-    Alert.alert("Sucesso", "Notificação individual enviada.");
-    router.back();
   }
 
   return (
@@ -106,6 +144,10 @@ export default function SendIndividualNotificationScreen() {
       <Text style={styles.subtitle}>
         Selecione um usuário e envie a notificação.
       </Text>
+
+      {feedback ? (
+        <AppFeedback message={feedback.message} variant={feedback.variant} />
+      ) : null}
 
       <Text style={styles.userLabel}>Destinatário</Text>
 
@@ -154,15 +196,31 @@ export default function SendIndividualNotificationScreen() {
         description={description}
         destinationRoute={destinationRoute}
         icon={icon}
-        onChangeTitle={setTitle}
-        onChangeDescription={setDescription}
-        onChangeDestinationRoute={setDestinationRoute}
+        onChangeTitle={(value) => {
+          setTitle(value);
+          if (feedback) {
+            setFeedback(null);
+          }
+        }}
+        onChangeDescription={(value) => {
+          setDescription(value);
+          if (feedback) {
+            setFeedback(null);
+          }
+        }}
+        onChangeDestinationRoute={(value) => {
+          setDestinationRoute(value);
+          if (feedback) {
+            setFeedback(null);
+          }
+        }}
         onChangeIcon={setIcon}
       />
 
       <AppButton
         title="Enviar notificação"
         onPress={handleSendNotification}
+        loading={isSubmitting}
         style={styles.button}
       />
     </SafeAreaView>

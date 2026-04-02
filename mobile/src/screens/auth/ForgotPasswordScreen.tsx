@@ -1,39 +1,49 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { resetPassword } from "@/src/services/firebase/auth";
 import { BackButton } from "@/src/components/BackButton";
 import { AppButton } from "@/src/components/AppButton";
+import { AppFeedback } from "@/src/components/AppFeedback";
+import { getUserFriendlyErrorMessage } from "@/src/utils/errorMessages";
+import { useRequireInternet } from "@/src/hooks/useRequireInternet";
 
 export default function ForgotPasswordScreen() {
+  const requireInternet = useRequireInternet(
+    "Conecte-se para recuperar sua senha.",
+  );
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   async function handleResetPassword() {
+    if (!requireInternet()) {
+      return;
+    }
+
     if (!email.trim()) {
-      Alert.alert("E-mail obrigatório", "Informe o e-mail da sua conta.");
+      setSuccessMessage("");
+      setErrorMessage("Informe o e-mail da sua conta.");
       return;
     }
 
     setIsLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
       await resetPassword(email.trim());
-      Alert.alert(
-        "E-mail enviado",
+      setSuccessMessage(
         "Se a conta existir, você receberá um link para redefinir sua senha.",
-        [
-          {
-            text: "Voltar para login",
-            onPress: () => router.replace("/login"),
-          },
-        ],
       );
-    } catch {
-      Alert.alert(
-        "Não foi possível enviar",
-        "Confira o e-mail informado e tente novamente.",
+    } catch (error) {
+      setErrorMessage(
+        getUserFriendlyErrorMessage(
+          error,
+          "Não foi possível enviar o link de recuperação agora.",
+        ),
       );
     } finally {
       setIsLoading(false);
@@ -51,10 +61,23 @@ export default function ForgotPasswordScreen() {
         </Text>
 
         <View style={styles.form}>
+          {errorMessage ? <AppFeedback message={errorMessage} /> : null}
+          {successMessage ? (
+            <AppFeedback message={successMessage} variant="success" />
+          ) : null}
+
           <TextInput
             autoCapitalize="none"
             keyboardType="email-address"
-            onChangeText={setEmail}
+            onChangeText={(value) => {
+              setEmail(value);
+              if (errorMessage) {
+                setErrorMessage("");
+              }
+              if (successMessage) {
+                setSuccessMessage("");
+              }
+            }}
             placeholder="E-mail"
             placeholderTextColor="#7c8b9a"
             style={styles.input}
@@ -67,6 +90,14 @@ export default function ForgotPasswordScreen() {
             loading={isLoading}
             style={styles.button}
           />
+
+          {successMessage ? (
+            <AppButton
+              title="Voltar para login"
+              onPress={() => router.replace("/login")}
+              variant="secondary"
+            />
+          ) : null}
         </View>
       </View>
     </SafeAreaView>

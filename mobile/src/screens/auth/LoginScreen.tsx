@@ -11,6 +11,8 @@ import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
 import { useAuth } from "@/src/hooks/useAuth";
 import { useRequireInternet } from "@/src/hooks/useRequireInternet";
 import { AppButton } from "@/src/components/AppButton";
+import { AppFeedback } from "@/src/components/AppFeedback";
+import { getUserFriendlyErrorMessage } from "@/src/utils/errorMessages";
 
 import { Redirect, router } from "expo-router";
 
@@ -20,6 +22,7 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   if (isAuthenticated) {
     return <Redirect href="/home" />;
@@ -30,8 +33,24 @@ export default function LoginScreen() {
       return;
     }
 
-    await signIn(email, password);
-    router.replace("/home");
+    if (!email.trim() || !password.trim()) {
+      setErrorMessage("Informe seu e-mail e sua senha para entrar.");
+      return;
+    }
+
+    setErrorMessage("");
+
+    try {
+      await signIn(email.trim(), password);
+      router.replace("/home");
+    } catch (error) {
+      setErrorMessage(
+        getUserFriendlyErrorMessage(
+          error,
+          "Não foi possível entrar agora. Tente novamente.",
+        ),
+      );
+    }
   }
 
   async function handleGoogleLogin() {
@@ -39,8 +58,19 @@ export default function LoginScreen() {
       return;
     }
 
-    await signInWithGoogle();
-    router.replace("/home");
+    setErrorMessage("");
+
+    try {
+      await signInWithGoogle();
+      router.replace("/home");
+    } catch (error) {
+      setErrorMessage(
+        getUserFriendlyErrorMessage(
+          error,
+          "Não foi possível entrar com Google agora.",
+        ),
+      );
+    }
   }
 
   return (
@@ -52,17 +82,29 @@ export default function LoginScreen() {
         </Text>
 
         <View style={styles.form}>
+          {errorMessage ? <AppFeedback message={errorMessage} /> : null}
+
           <TextInput
             autoCapitalize="none"
             keyboardType="email-address"
-            onChangeText={setEmail}
+            onChangeText={(value) => {
+              setEmail(value);
+              if (errorMessage) {
+                setErrorMessage("");
+              }
+            }}
             placeholder="E-mail"
             placeholderTextColor="#7c8b9a"
             style={styles.input}
             value={email}
           />
           <TextInput
-            onChangeText={setPassword}
+            onChangeText={(value) => {
+              setPassword(value);
+              if (errorMessage) {
+                setErrorMessage("");
+              }
+            }}
             placeholder="Senha"
             placeholderTextColor="#7c8b9a"
             secureTextEntry

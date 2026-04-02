@@ -9,7 +9,7 @@ export default function Index() {
   if (isLoading) {
     return (
       <AppLoadingScreen
-        title="Carregando app"
+        title="Carregando aplicativo"
         message="Validando sua sessão e preparando a navegação."
       />
     );

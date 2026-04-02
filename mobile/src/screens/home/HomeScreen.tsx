@@ -17,7 +17,7 @@ export default function HomeScreen() {
   if (isLoading) {
     return (
       <AppLoadingScreen
-        title="Carregando home"
+        title="Carregando página inicial"
         message="Buscando parâmetros e informações do aplicativo."
       />
     );
