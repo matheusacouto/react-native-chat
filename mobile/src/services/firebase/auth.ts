@@ -47,13 +47,27 @@ export async function signInWithGoogleNative() {
 }
 
 export async function signOutFirebase() {
-  try {
-    await GoogleSignin.signOut();
-  } catch {
-    // O usuário pode não ter sessão Google ativa, e isso não deve impedir o logout do Firebase.
-  }
+  const googleUser = GoogleSignin.getCurrentUser();
 
-  return signOut(firebaseAuth);
+  try {
+    await signOut(firebaseAuth);
+  } finally {
+    if (!googleUser) {
+      return;
+    }
+
+    try {
+      await GoogleSignin.revokeAccess();
+    } catch {
+      // A revogação pode falhar por conectividade ou estado local, mas não deve bloquear o logout.
+    }
+
+    try {
+      await GoogleSignin.signOut();
+    } catch {
+      // O usuário pode não ter sessão Google ativa localmente, e isso não deve impedir o logout.
+    }
+  }
 }
 
 export async function resetPassword(email: string) {
