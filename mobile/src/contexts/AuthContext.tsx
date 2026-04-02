@@ -12,6 +12,7 @@ import {
 import { router } from "expo-router";
 import {
   getIdToken,
+  getUserIdToken,
   onFirebaseAuthStateChanged,
   signInWithEmail,
   signInWithGoogleNative,
@@ -81,7 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       try {
-        const idToken = await firebaseUser.getIdToken();
+        const idToken = await getUserIdToken(firebaseUser);
         const backendUser = await loginWithFirebase(idToken);
         setUser(backendUser);
         await registerCurrentDevicePushToken(idToken);
