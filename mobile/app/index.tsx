@@ -1,16 +1,17 @@
 import { useContext } from "react";
-import { View, Text } from "react-native";
 import { AuthContext } from "@/src/contexts/AuthContext";
 import { Redirect } from "expo-router";
+import { AppLoadingScreen } from "@/src/components/AppLoadingScreen";
 
 export default function Index() {
   const { isLoading, isAuthenticated } = useContext(AuthContext);
 
   if (isLoading) {
     return (
-      <View>
-        <Text>Carregando...</Text>
-      </View>
+      <AppLoadingScreen
+        title="Carregando app"
+        message="Validando sua sessão e preparando a navegação."
+      />
     );
   }
 
