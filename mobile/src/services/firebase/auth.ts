@@ -1,19 +1,7 @@
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import Constants from "expo-constants";
-import {
-  getAuth,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithCredential,
-  signOut,
-  onAuthStateChanged,
-} from "firebase/auth";
-
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
-import { firebaseApp } from "./firebaseConfig";
-
-const auth = getAuth(firebaseApp);
 const webClientId = Constants.expoConfig?.extra?.googleAuth?.webClientId;
 
 GoogleSignin.configure({
@@ -21,7 +9,7 @@ GoogleSignin.configure({
 });
 
 export async function signInWithEmail(email: string, password: string) {
-  return signInWithEmailAndPassword(auth, email, password);
+  return auth().signInWithEmailAndPassword(email, password);
 }
 
 export async function signInWithGoogleNative() {
@@ -41,26 +29,31 @@ export async function signInWithGoogleNative() {
     throw new Error("Google não retornou idToken.");
   }
 
-  const credential = GoogleAuthProvider.credential(idToken);
+  const credential = auth.GoogleAuthProvider.credential(idToken);
 
-  return signInWithCredential(auth, credential);
+  return auth().signInWithCredential(credential);
 }
 
 export async function signOutFirebase() {
-  await GoogleSignin.signOut();
-  return signOut(auth);
+  try {
+    await GoogleSignin.signOut();
+  } catch {
+    // O usuário pode não ter sessão Google ativa, e isso não deve impedir o logout do Firebase.
+  }
+
+  return auth().signOut();
 }
 
 export async function resetPassword(email: string) {
-  return sendPasswordResetEmail(auth, email);
+  return auth().sendPasswordResetEmail(email);
 }
 
 export function getCurrentUser() {
-  return auth.currentUser;
+  return auth().currentUser;
 }
 
 export async function getIdToken() {
-  const user = auth.currentUser;
+  const user = auth().currentUser;
 
   if (!user) {
     return null;
@@ -70,7 +63,7 @@ export async function getIdToken() {
 }
 
 export function onFirebaseAuthStateChanged(
-  callback: (user: typeof auth.currentUser) => void,
+  callback: (user: FirebaseAuthTypes.User | null) => void,
 ) {
-  return onAuthStateChanged(auth, callback);
+  return auth().onAuthStateChanged(callback);
 }
