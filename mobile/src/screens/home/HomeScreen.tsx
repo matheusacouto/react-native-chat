@@ -23,8 +23,9 @@ export default function HomeScreen() {
     );
   }
 
-  const homeTitle = parameterMap.home_title;
-  const homeSubtitle = parameterMap.home_subtitle;
+  const homeTitle = parameterMap.home_title ?? "Home";
+  const homeSubtitle =
+    parameterMap.home_subtitle ?? "Você entrou com sucesso no app.";
   const appNotice = parameterMap.home_notice;
 
   return (
