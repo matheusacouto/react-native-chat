@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import {
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import { router } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 import {
   getConversationMessages,
   sendMessage,
@@ -18,35 +19,58 @@ import { useAuth } from "@/src/hooks/useAuth";
 import { useRequireInternet } from "@/src/hooks/useRequireInternet";
 import { BackButton } from "@/src/components/BackButton";
 import { AppButton } from "@/src/components/AppButton";
+import { AppLoadingScreen } from "@/src/components/AppLoadingScreen";
 
 export default function ChatRoomScreen() {
   const { user } = useAuth();
-  const requireInternet = useRequireInternet("Conecte-se para enviar mensagens.");
+  const requireInternet = useRequireInternet(
+    "Conecte-se para enviar mensagens.",
+  );
 
-  const { conversationId, targetUserId } = useLocalSearchParams<{
-    conversationId: string;
-    targetUserId: string;
-  }>();
+  const { conversationId, targetUserId, targetUserName } =
+    useLocalSearchParams<{
+      conversationId: string;
+      targetUserId: string;
+      targetUserName?: string;
+    }>();
 
   const [messages, setMessages] = useState<MessageModel[]>([]);
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadMessages() {
-      try {
-        if (!conversationId) {
-          return;
-        }
+  const conversationTitle =
+    typeof targetUserName === "string" && targetUserName.length > 0
+      ? decodeURIComponent(targetUserName)
+      : "Conversa";
 
-        const data = await getConversationMessages(Number(conversationId));
-        setMessages(data);
-      } finally {
-        setIsLoading(false);
+  async function loadMessages() {
+    try {
+      if (!conversationId) {
+        return;
       }
+
+      const data = await getConversationMessages(Number(conversationId));
+      setMessages(data);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!conversationId) {
+      setIsLoading(false);
+      return;
     }
 
-    loadMessages();
+    void loadMessages();
+
+    const intervalId = setInterval(() => {
+      void loadMessages();
+    }, 2000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [conversationId]);
 
   async function handleSendMessage() {
@@ -66,60 +90,64 @@ export default function ChatRoomScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <BackButton onPress={() => router.back()} style={styles.backButton} />
-          <Text style={styles.title}>Conversa</Text>
-        </View>
-        <Text style={styles.message}>Carregando mensagens...</Text>
-      </SafeAreaView>
+      <AppLoadingScreen
+        title={conversationTitle}
+        message="Carregando mensagens da conversa."
+      />
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <BackButton onPress={() => router.back()} style={styles.backButton} />
-        <Text style={styles.title}>Conversa</Text>
-      </View>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={10}
+      >
+        <View style={styles.header}>
+          <BackButton onPress={() => router.back()} style={styles.backButton} />
+          <Text style={styles.title}>{conversationTitle}</Text>
+        </View>
 
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <View
-            style={[
-              styles.messageCard,
-              item.remetente.id === user?.id
-                ? styles.myMessage
-                : styles.otherMessage,
-            ]}
-          >
-            <Text style={styles.sender}>
-              {item.remetente.nome ?? item.remetente.email}
-            </Text>
-            <Text style={styles.text}>{item.mensagem}</Text>
-          </View>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.message}>Nenhuma mensagem encontrada.</Text>
-        }
-      />
+        <FlatList
+          data={messages}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={styles.listContent}
+          renderItem={({ item }) => (
+            <View
+              style={[
+                styles.messageCard,
+                item.remetente.id === user?.id
+                  ? styles.myMessage
+                  : styles.otherMessage,
+              ]}
+            >
+              <Text style={styles.sender}>
+                {item.remetente.nome ?? item.remetente.email}
+              </Text>
+              <Text style={styles.text}>{item.mensagem}</Text>
+            </View>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.message}>Nenhuma mensagem encontrada.</Text>
+          }
+        />
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          value={text}
-          onChangeText={setText}
-          placeholder="Digite sua mensagem"
-          style={styles.input}
-        />
-        <AppButton
-          title="Enviar"
-          onPress={handleSendMessage}
-          style={styles.sendButton}
-        />
-      </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            value={text}
+            onChangeText={setText}
+            placeholder="Digite sua mensagem"
+            placeholderTextColor="#808080"
+            style={styles.input}
+          />
+          <AppButton
+            title="Enviar"
+            onPress={handleSendMessage}
+            style={styles.sendButton}
+          />
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -129,6 +157,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f4f7fb",
     padding: 16,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   header: {
     marginBottom: 16,
@@ -194,7 +225,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   sendButton: {
-    paddingHorizontal: 18,
-    paddingVertical: 0,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
   },
 });

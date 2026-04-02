@@ -8,6 +8,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/src/hooks/useAuth";
 import { BackButton } from "@/src/components/BackButton";
+import { AppLoadingScreen } from "@/src/components/AppLoadingScreen";
 
 export default function ChatListScreen() {
   const { user } = useAuth();
@@ -34,27 +35,27 @@ export default function ChatListScreen() {
     loadUser();
   }, []);
 
-  async function handleOpenChat(targetUserId: number) {
+  async function handleOpenChat(targetUser: UserModel) {
     if (!user) {
       return;
     }
 
-    const conversation = await startConversation(user.id, targetUserId);
+    const conversation = await startConversation(user.id, targetUser.id);
+    const targetUserName = encodeURIComponent(
+      targetUser.nome ?? targetUser.email,
+    );
 
     router.push(
-      `/chat-room?conversationId=${conversation.id}&targetUserId=${targetUserId}`,
+      `/chat-room?conversationId=${conversation.id}&targetUserId=${targetUser.id}&targetUserName=${targetUserName}`,
     );
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <BackButton onPress={() => router.back()} style={styles.backButton} />
-          <Text style={styles.title}>Chat</Text>
-        </View>
-        <Text style={styles.message}>Carregando usuários...</Text>
-      </SafeAreaView>
+      <AppLoadingScreen
+        title="Carregando chat"
+        message="Buscando usuários disponíveis para conversar."
+      />
     );
   }
   return (
@@ -70,7 +71,7 @@ export default function ChatListScreen() {
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => handleOpenChat(item.id)}
+            onPress={() => handleOpenChat(item)}
             style={styles.card}
           >
             <Text style={styles.name}>{item.nome ?? "Usuário sem nome"}</Text>
