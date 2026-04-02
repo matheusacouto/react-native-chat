@@ -36,6 +36,31 @@ export default class AppParametersSeeder implements Seeder {
         grupo: 'home',
         ativo: true,
       },
+      {
+        chave: 'notification_routes',
+        valor: JSON.stringify([
+          {
+            label: 'Home',
+            value: '/home',
+            icon: 'home',
+          },
+          {
+            label: 'Notificações',
+            value: '/notification',
+            icon: 'notifications',
+          },
+          {
+            label: 'Chat',
+            value: '/chat',
+            icon: 'chat',
+          },
+        ]),
+        descricao:
+          'Lista de rotas disponíveis para envio de notificações com ícone associado.',
+        tipo: 'json',
+        grupo: 'notifications',
+        ativo: true,
+      },
     ];
 
     for (const parameter of parameters) {
