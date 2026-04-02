@@ -27,6 +27,14 @@ export default function SendGlobalNotificationScreen() {
       return;
     }
 
+    if (!destinationRoute.trim()) {
+      Alert.alert(
+        "Rota obrigatória",
+        "Selecione uma rota de destino antes de enviar a notificação.",
+      );
+      return;
+    }
+
     const idToken = await getIdToken();
 
     if (!idToken) {

@@ -70,6 +70,14 @@ export default function SendIndividualNotificationScreen() {
       return;
     }
 
+    if (!destinationRoute.trim()) {
+      Alert.alert(
+        "Rota obrigatória",
+        "Selecione uma rota de destino antes de enviar a notificação.",
+      );
+      return;
+    }
+
     const idToken = await getIdToken();
 
     if (!idToken) {
