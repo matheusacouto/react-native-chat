@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "62212837130-14hv58eirsh65rk1p7shulo55lsisjhr.apps.googleusercontent.com",
+          "client_id": "62212837130-0bben6m6h9b38vpfhvh8f9sakekoubjk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.matheus.rnchat",
-            "certificate_hash": "95aec40b3aa9c554caf8d05bdd14604bdb6b0ee5"
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },
         {
@@ -37,6 +37,13 @@
             {
               "client_id": "62212837130-qn910hc18a4q7u93fkreunqbs6gtsglj.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "62212837130-l9h0rps4dte0q86e4muuidki3l62q05k.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.matheus.rnchat"
+              }
             }
           ]
         }
