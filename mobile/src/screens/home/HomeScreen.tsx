@@ -1,4 +1,4 @@
-import { Redirect, router } from "expo-router";
+import { Redirect, router } from "@/src/navigation/router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/src/hooks/useAuth";

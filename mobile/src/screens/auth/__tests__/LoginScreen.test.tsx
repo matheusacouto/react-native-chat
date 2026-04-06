@@ -9,20 +9,7 @@ jest.mock("@/src/hooks/useRequireInternet", () => ({
   useRequireInternet: jest.fn(),
 }));
 
-jest.mock("@react-native-google-signin/google-signin", () => ({
-  GoogleSigninButton: ({ onPress, disabled }: any) => {
-    const React = require("react");
-    const { Pressable, Text } = require("react-native");
-
-    return (
-      <Pressable onPress={onPress} disabled={disabled}>
-        <Text>Google Login</Text>
-      </Pressable>
-    );
-  },
-}));
-
-jest.mock("expo-router", () => ({
+jest.mock("@/src/navigation/router", () => ({
   Redirect: ({ href }: { href: string }) => `Redirect:${href}`,
   router: {
     replace: jest.fn(),
@@ -33,7 +20,7 @@ jest.mock("expo-router", () => ({
 const mockUseAuth = require("@/src/hooks/useAuth").useAuth;
 const mockUseRequireInternet =
   require("@/src/hooks/useRequireInternet").useRequireInternet;
-const mockRouter = require("expo-router").router;
+const mockRouter = require("@/src/navigation/router").router;
 
 describe("LoginScreen", () => {
   beforeEach(() => {
@@ -43,6 +30,8 @@ describe("LoginScreen", () => {
       signInWithGoogle: jest.fn().mockResolvedValue(undefined),
       isLoading: false,
       isAuthenticated: false,
+      authFeedback: null,
+      clearAuthFeedback: jest.fn(),
     });
   });
 
@@ -59,6 +48,8 @@ describe("LoginScreen", () => {
       signInWithGoogle: jest.fn(),
       isLoading: false,
       isAuthenticated: false,
+      authFeedback: null,
+      clearAuthFeedback: jest.fn(),
     });
     mockUseRequireInternet.mockReturnValue(requireInternet);
 
@@ -85,6 +76,8 @@ describe("LoginScreen", () => {
       signInWithGoogle: jest.fn(),
       isLoading: false,
       isAuthenticated: false,
+      authFeedback: null,
+      clearAuthFeedback: jest.fn(),
     });
     mockUseRequireInternet.mockReturnValue(requireInternet);
 
@@ -108,11 +101,13 @@ describe("LoginScreen", () => {
       signInWithGoogle,
       isLoading: false,
       isAuthenticated: false,
+      authFeedback: null,
+      clearAuthFeedback: jest.fn(),
     });
 
     const { getByText } = render(<LoginScreen />);
 
-    fireEvent.press(getByText("Google Login"));
+    fireEvent.press(getByText("Entrar com Google"));
 
     await waitFor(() => {
       expect(signInWithGoogle).toHaveBeenCalledTimes(1);
@@ -126,5 +121,23 @@ describe("LoginScreen", () => {
     fireEvent.press(getByText("Esqueci minha senha"));
 
     expect(mockRouter.push).toHaveBeenCalledWith("/forgot-password");
+  });
+
+  it("shows logout feedback when available", () => {
+    mockUseAuth.mockReturnValue({
+      signIn: jest.fn(),
+      signInWithGoogle: jest.fn(),
+      isLoading: false,
+      isAuthenticated: false,
+      authFeedback: {
+        message: "Você saiu da sua conta com sucesso.",
+        variant: "success",
+      },
+      clearAuthFeedback: jest.fn(),
+    });
+
+    const { getByText } = render(<LoginScreen />);
+
+    expect(getByText("Você saiu da sua conta com sucesso.")).toBeTruthy();
   });
 });

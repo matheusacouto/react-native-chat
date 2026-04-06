@@ -9,7 +9,7 @@ jest.mock("@/src/hooks/useAppParameters", () => ({
   useAppParameters: jest.fn(),
 }));
 
-jest.mock("expo-router", () => ({
+jest.mock("@/src/navigation/router", () => ({
   Redirect: ({ href }: { href: string }) => `Redirect:${href}`,
   router: {
     push: jest.fn(),
@@ -19,7 +19,7 @@ jest.mock("expo-router", () => ({
 const mockUseAuth = require("@/src/hooks/useAuth").useAuth;
 const mockUseAppParameters =
   require("@/src/hooks/useAppParameters").useAppParameters;
-const mockRouter = require("expo-router").router;
+const mockRouter = require("@/src/navigation/router").router;
 
 describe("HomeScreen", () => {
   beforeEach(() => {

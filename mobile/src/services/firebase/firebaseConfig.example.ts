@@ -1,6 +1,4 @@
-import { getApp, getApps, initializeApp } from "firebase/app";
-
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "your_api_key",
   authDomain: "your_project.firebaseapp.com",
   projectId: "your_project_id",
@@ -9,7 +7,3 @@ const firebaseConfig = {
   appId: "your_app_id",
   measurementId: "your_measurement_id",
 };
-
-export const firebaseApp = getApps().length
-  ? getApp()
-  : initializeApp(firebaseConfig);

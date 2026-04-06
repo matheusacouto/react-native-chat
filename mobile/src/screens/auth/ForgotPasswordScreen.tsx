@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router } from "@/src/navigation/router";
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

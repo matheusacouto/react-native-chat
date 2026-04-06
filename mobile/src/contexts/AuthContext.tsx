@@ -6,10 +6,8 @@ import {
   useState,
 } from "react";
 import { Platform } from "react-native";
-import {
-  Alert
-} from "react-native";
-import { router } from "expo-router";
+import { Alert } from "react-native";
+import { router } from "@/src/navigation/router";
 import {
   getIdToken,
   getUserIdToken,
@@ -33,10 +31,17 @@ type AuthUser = {
   nome: string | null;
 };
 
+type AuthFeedback = {
+  message: string;
+  variant: "error" | "success" | "info";
+};
+
 type AuthContextData = {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  authFeedback: AuthFeedback | null;
+  clearAuthFeedback: () => void;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -46,6 +51,8 @@ export const AuthContext = createContext<AuthContextData>({
   user: null,
   isLoading: true,
   isAuthenticated: false,
+  authFeedback: null,
+  clearAuthFeedback: () => {},
   signIn: async () => {},
   signOut: async () => {},
   signInWithGoogle: async () => {},
@@ -58,6 +65,7 @@ type AuthProviderProps = {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authFeedback, setAuthFeedback] = useState<AuthFeedback | null>(null);
 
   const isAuthenticated = !!user;
 
@@ -98,6 +106,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   async function signIn(email: string, password: string) {
     setIsLoading(true);
+    setAuthFeedback(null);
 
     try {
       await signInWithEmail(email, password);
@@ -118,6 +127,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   async function signInWithGoogle() {
     setIsLoading(true);
+    setAuthFeedback(null);
 
     try {
       await signInWithGoogleNative();
@@ -148,6 +158,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
     try {
       await clearSession();
+      setAuthFeedback({
+        message: "Você saiu da sua conta com sucesso.",
+        variant: "success",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -173,6 +187,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user,
         isLoading,
         isAuthenticated,
+        authFeedback,
+        clearAuthFeedback: () => setAuthFeedback(null),
         signIn,
         signOut,
         signInWithGoogle,

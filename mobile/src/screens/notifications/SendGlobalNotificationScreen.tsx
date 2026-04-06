@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router } from "@/src/navigation/router";
 import { getIdToken } from "@/src/services/firebase/auth";
 import { sendGlobalNotification } from "@/src/services/api/notifications.service";
 import { useRequireInternet } from "@/src/hooks/useRequireInternet";

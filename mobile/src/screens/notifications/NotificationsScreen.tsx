@@ -7,7 +7,7 @@ import {
 } from "@/src/services/api/notifications.service";
 import { NotificationItem } from "@/src/models/notification";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router } from "@/src/navigation/router";
 import { useRequireInternet } from "@/src/hooks/useRequireInternet";
 import { BackButton } from "@/src/components/BackButton";
 import { AppLoadingScreen } from "@/src/components/AppLoadingScreen";

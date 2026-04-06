@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router } from "@/src/navigation/router";
 import { getIdToken } from "@/src/services/firebase/auth";
 import { getUsers } from "@/src/services/api/users.service";
 import { sendIndividualNotification } from "@/src/services/api/notifications.service";

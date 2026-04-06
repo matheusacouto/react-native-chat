@@ -7,17 +7,23 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
 import { useAuth } from "@/src/hooks/useAuth";
 import { useRequireInternet } from "@/src/hooks/useRequireInternet";
 import { AppButton } from "@/src/components/AppButton";
 import { AppFeedback } from "@/src/components/AppFeedback";
 import { getUserFriendlyErrorMessage } from "@/src/utils/errorMessages";
 
-import { Redirect, router } from "expo-router";
+import { Redirect, router } from "@/src/navigation/router";
 
 export default function LoginScreen() {
-  const { signIn, signInWithGoogle, isLoading, isAuthenticated } = useAuth();
+  const {
+    signIn,
+    signInWithGoogle,
+    isLoading,
+    isAuthenticated,
+    authFeedback,
+    clearAuthFeedback,
+  } = useAuth();
   const requireInternet = useRequireInternet();
 
   const [email, setEmail] = useState("");
@@ -32,6 +38,8 @@ export default function LoginScreen() {
     if (!requireInternet()) {
       return;
     }
+
+    clearAuthFeedback();
 
     if (!email.trim() || !password.trim()) {
       setErrorMessage("Informe seu e-mail e sua senha para entrar.");
@@ -58,6 +66,7 @@ export default function LoginScreen() {
       return;
     }
 
+    clearAuthFeedback();
     setErrorMessage("");
 
     try {
@@ -82,6 +91,12 @@ export default function LoginScreen() {
         </Text>
 
         <View style={styles.form}>
+          {authFeedback ? (
+            <AppFeedback
+              message={authFeedback.message}
+              variant={authFeedback.variant}
+            />
+          ) : null}
           {errorMessage ? <AppFeedback message={errorMessage} /> : null}
 
           <TextInput
@@ -89,6 +104,9 @@ export default function LoginScreen() {
             keyboardType="email-address"
             onChangeText={(value) => {
               setEmail(value);
+              if (authFeedback) {
+                clearAuthFeedback();
+              }
               if (errorMessage) {
                 setErrorMessage("");
               }
@@ -101,6 +119,9 @@ export default function LoginScreen() {
           <TextInput
             onChangeText={(value) => {
               setPassword(value);
+              if (authFeedback) {
+                clearAuthFeedback();
+              }
               if (errorMessage) {
                 setErrorMessage("");
               }
@@ -119,10 +140,13 @@ export default function LoginScreen() {
           />
 
           <View style={styles.googleButtonWrapper}>
-            <GoogleSigninButton
-              style={styles.googleButton}
+            <AppButton
+              title="Entrar com Google"
               onPress={handleGoogleLogin}
+              loading={isLoading}
               disabled={isLoading}
+              variant="secondary"
+              style={styles.googleButton}
             />
           </View>
 
@@ -188,9 +212,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   googleButton: {
-    alignSelf: "center",
-    width: 220,
-    height: 48,
+    minWidth: 220,
   },
   googleButtonWrapper: {
     alignItems: "center",

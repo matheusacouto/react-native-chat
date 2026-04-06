@@ -10,15 +10,14 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "@react-native-firebase/auth";
-import Constants from "expo-constants";
+
+import Config from "react-native-config";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
-const webClientId = Constants.expoConfig?.extra?.googleAuth?.webClientId;
+const webClientId = Config.GOOGLE_WEB_CLIENT_ID;
 const firebaseAuth = getAuth(getApp());
 
-GoogleSignin.configure({
-  webClientId,
-});
+GoogleSignin.configure({ webClientId });
 
 export async function signInWithEmail(email: string, password: string) {
   return signInWithEmailAndPassword(firebaseAuth, email, password);

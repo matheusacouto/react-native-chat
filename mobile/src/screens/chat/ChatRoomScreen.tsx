@@ -8,7 +8,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
 import {
   getConversationMessages,
   sendMessage,
@@ -22,6 +21,7 @@ import { AppButton } from "@/src/components/AppButton";
 import { AppLoadingScreen } from "@/src/components/AppLoadingScreen";
 import { AppFeedback } from "@/src/components/AppFeedback";
 import { getUserFriendlyErrorMessage } from "@/src/utils/errorMessages";
+import { router, useLocalSearchParams } from "@/src/navigation/router";
 
 export default function ChatRoomScreen() {
   const { user } = useAuth();

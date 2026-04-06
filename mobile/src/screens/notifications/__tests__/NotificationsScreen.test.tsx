@@ -14,7 +14,7 @@ jest.mock("@/src/services/api/notifications.service", () => ({
   markNotificationAsRead: jest.fn(),
 }));
 
-jest.mock("expo-router", () => ({
+jest.mock("@/src/navigation/router", () => ({
   router: {
     back: jest.fn(),
     push: jest.fn(),
@@ -28,7 +28,7 @@ const mockGetNotifications =
   require("@/src/services/api/notifications.service").getNotifications;
 const mockMarkNotificationAsRead =
   require("@/src/services/api/notifications.service").markNotificationAsRead;
-const mockRouter = require("expo-router").router;
+const mockRouter = require("@/src/navigation/router").router;
 
 const notificationsFixture = [
   {

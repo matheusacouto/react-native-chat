@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>62212837130-l9h0rps4dte0q86e4muuidki3l62q05k.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.62212837130-l9h0rps4dte0q86e4muuidki3l62q05k</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>62212837130-14hv58eirsh65rk1p7shulo55lsisjhr.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyB--82vgEz6UQCW375RuonNmDj94hwm9yk</string>
+	<key>GCM_SENDER_ID</key>
+	<string>62212837130</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.matheus.rnchat</string>
+	<key>PROJECT_ID</key>
+	<string>react-native-chat-76724</string>
+	<key>STORAGE_BUCKET</key>
+	<string>react-native-chat-76724.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:62212837130:ios:4d49ceb5eea9b1603df4f3</string>
+</dict>
+</plist>

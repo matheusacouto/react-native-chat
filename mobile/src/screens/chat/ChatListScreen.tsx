@@ -2,7 +2,7 @@ import { UserModel } from "@/src/models/user";
 import { startConversation } from "@/src/services/api/chat.service";
 import { getUsers } from "@/src/services/api/users.service";
 import { getIdToken } from "@/src/services/firebase/auth";
-import { router } from "expo-router";
+import { router } from "@/src/navigation/router";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -41,13 +41,15 @@ export default function ChatListScreen() {
     }
 
     const conversation = await startConversation(user.id, targetUser.id);
-    const targetUserName = encodeURIComponent(
-      targetUser.nome ?? targetUser.email,
-    );
 
-    router.push(
-      `/chat-room?conversationId=${conversation.id}&targetUserId=${targetUser.id}&targetUserName=${targetUserName}`,
-    );
+    router.push({
+      name: "ChatRoom",
+      params: {
+        conversationId: String(conversation.id),
+        targetUserId: String(targetUser.id),
+        targetUserName: targetUser.nome ?? targetUser.email,
+      },
+    });
   }
 
   if (isLoading) {

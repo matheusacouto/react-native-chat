@@ -1,7 +1,10 @@
 import axios from "axios";
+import Config from "react-native-config";
+
+const baseURL = Config.EXPO_PUBLIC_API_URL;
 
 export const API = axios.create({
-  baseURL: `${process.env.EXPO_PUBLIC_API_URL}`,
+  baseURL,
 });
 
 let onSessionExpired: (() => Promise<void>) | null = null;
