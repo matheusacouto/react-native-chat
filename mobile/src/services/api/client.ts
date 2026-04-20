@@ -1,7 +1,7 @@
 import axios from "axios";
 import Config from "react-native-config";
 
-const baseURL = Config.EXPO_PUBLIC_API_URL;
+const baseURL = Config.PUBLIC_API_URL;
 
 export const API = axios.create({
   baseURL,

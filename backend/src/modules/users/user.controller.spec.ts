@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './user.controller';
 import { UsersService } from './user.service';
 import { User } from './user.entity';
+import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 
 describe('UsersController', () => {
   let usersController: UsersController;
@@ -20,7 +21,10 @@ describe('UsersController', () => {
           useValue: mockUsersService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(FirebaseAuthGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .compile();
 
     usersController = module.get<UsersController>(UsersController);
     usersService = module.get(UsersService);

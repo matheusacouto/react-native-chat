@@ -139,7 +139,7 @@ export class NotificationsService {
     const remetente = await this.getUserByFirebaseUid(firebaseUid);
     const users = await this.usersService.findAll();
 
-    const destinatarios = users.filter((user) => user.id !== remetente.id);
+    const destinatarios = users;
 
     const notification = this.notificationsRepository.create({
       tipo: Tipo.GLOBAL,

@@ -7,6 +7,8 @@ import { NotificationsService } from './notification.service';
 import { Notification, Tipo } from './notification.entity';
 import { NotificationRecipient } from './notification-recipient.entity';
 import { User } from '../users/user.entity';
+import { PushService } from '../push/push.service';
+import { FirebaseAuthService } from '../firebase/firebase.service';
 
 describe('NotificationsService', () => {
   let notificationsService: NotificationsService;
@@ -16,6 +18,10 @@ describe('NotificationsService', () => {
   let notificationsRepository: jest.Mocked<Repository<Notification>>;
   let notificationRecipientsRepository: jest.Mocked<
     Repository<NotificationRecipient>
+  >;
+  let pushService: jest.Mocked<Pick<PushService, 'findActiveTokensByUserIds'>>;
+  let firebaseService: jest.Mocked<
+    Pick<FirebaseAuthService, 'sendPushNotificationToTokens'>
   >;
 
   beforeEach(async () => {
@@ -38,6 +44,12 @@ describe('NotificationsService', () => {
       create: jest.fn(),
       save: jest.fn(),
     };
+    const pushServiceMock = {
+      findActiveTokensByUserIds: jest.fn().mockResolvedValue([]),
+    };
+    const firebaseServiceMock = {
+      sendPushNotificationToTokens: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -54,6 +66,14 @@ describe('NotificationsService', () => {
           provide: UsersService,
           useValue: usersServiceMock,
         },
+        {
+          provide: PushService,
+          useValue: pushServiceMock,
+        },
+        {
+          provide: FirebaseAuthService,
+          useValue: firebaseServiceMock,
+        },
       ],
     }).compile();
 
@@ -64,6 +84,8 @@ describe('NotificationsService', () => {
     notificationRecipientsRepository = module.get(
       getRepositoryToken(NotificationRecipient),
     );
+    pushService = module.get(PushService);
+    firebaseService = module.get(FirebaseAuthService);
   });
 
   it('should be defined', () => {
@@ -264,7 +286,7 @@ describe('NotificationsService', () => {
   });
 
   describe('sendGlobalNotification', () => {
-    it('should create a global notification and recipients for all users except sender', async () => {
+    it('should create a global notification and recipients for all users including sender', async () => {
       const remetente: Pick<User, 'id' | 'firebase_uid'> = {
         id: 1,
         firebase_uid: 'firebase-123',
@@ -279,13 +301,20 @@ describe('NotificationsService', () => {
         tipo: Tipo.GLOBAL,
       } as Partial<Notification>;
       const createdRecipients = [
+        { usuario: users[0] },
         { usuario: users[1] },
         { usuario: users[2] },
       ] as Partial<NotificationRecipient>[];
       const savedRecipients = [
         { id: 40, ...createdRecipients[0] },
         { id: 41, ...createdRecipients[1] },
+        { id: 42, ...createdRecipients[2] },
       ] as Partial<NotificationRecipient>[];
+      const deliveredRecipients = savedRecipients.map((recipient) => ({
+        ...recipient,
+        entregue_push: true,
+        entregue_push_em: new Date(),
+      })) as Partial<NotificationRecipient>[];
 
       usersService.findByFirebaseUid.mockResolvedValue(remetente as User);
       usersService.findAll.mockResolvedValue(users as User[]);
@@ -297,10 +326,20 @@ describe('NotificationsService', () => {
       );
       notificationRecipientsRepository.create
         .mockReturnValueOnce(createdRecipients[0] as NotificationRecipient)
-        .mockReturnValueOnce(createdRecipients[1] as NotificationRecipient);
-      (notificationRecipientsRepository.save as jest.Mock).mockResolvedValue(
-        savedRecipients as NotificationRecipient[],
-      );
+        .mockReturnValueOnce(createdRecipients[1] as NotificationRecipient)
+        .mockReturnValueOnce(createdRecipients[2] as NotificationRecipient);
+      (notificationRecipientsRepository.save as jest.Mock)
+        .mockResolvedValueOnce(savedRecipients as NotificationRecipient[])
+        .mockResolvedValueOnce(deliveredRecipients as NotificationRecipient[]);
+      pushService.findActiveTokensByUserIds.mockResolvedValue([
+        'token-1',
+        'token-2',
+        'token-3',
+      ]);
+      firebaseService.sendPushNotificationToTokens.mockResolvedValue({
+        successCount: 3,
+        failureCount: 0,
+      } as any);
 
       const result = await notificationsService.sendGlobalNotification(
         'firebase-123',
@@ -311,11 +350,23 @@ describe('NotificationsService', () => {
         { key: 'value' },
       );
 
-      expect(result).toEqual(savedRecipients);
+      expect(result).toEqual(deliveredRecipients);
       expect(usersService.findAll).toHaveBeenCalledTimes(1);
-      expect(notificationRecipientsRepository.create).toHaveBeenCalledTimes(2);
+      expect(notificationRecipientsRepository.create).toHaveBeenCalledTimes(3);
       expect(notificationRecipientsRepository.save).toHaveBeenCalledWith(
         createdRecipients,
+      );
+      expect(pushService.findActiveTokensByUserIds).toHaveBeenCalledWith([
+        1, 2, 3,
+      ]);
+      expect(firebaseService.sendPushNotificationToTokens).toHaveBeenCalledWith(
+        ['token-1', 'token-2', 'token-3'],
+        {
+          title: 'Titulo',
+          body: 'Descricao',
+          route: 'Home',
+          payload: { key: 'value' },
+        },
       );
     });
   });
