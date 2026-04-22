@@ -78,6 +78,32 @@ function resolveTarget(target: RouterTarget) {
   throw new Error(`Rota não mapeada para React Navigation: ${target}`);
 }
 
+export function getRouteNameForTarget(target: string) {
+  if (isPathRoute(target)) {
+    return pathMap[target];
+  }
+
+  if (isRouteName(target)) {
+    return target;
+  }
+
+  return null;
+}
+
+export function isCurrentRoute(target: string) {
+  if (!navigationRef.isReady()) {
+    return false;
+  }
+
+  const targetRouteName = getRouteNameForTarget(target);
+
+  if (!targetRouteName) {
+    return false;
+  }
+
+  return navigationRef.getCurrentRoute()?.name === targetRouteName;
+}
+
 export const router = {
   back() {
     if (navigationRef.isReady() && navigationRef.canGoBack()) {

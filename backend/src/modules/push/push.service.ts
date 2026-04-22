@@ -47,6 +47,29 @@ export class PushService {
     return this.pushTokenRepository.save(pushToken);
   }
 
+  async unregisterToken(
+    firebaseUid: string,
+    token: string,
+  ): Promise<PushToken | null> {
+    const existingToken = await this.pushTokenRepository.findOne({
+      where: {
+        token,
+        usuario: {
+          firebase_uid: firebaseUid,
+        },
+      },
+      relations: ['usuario'],
+    });
+
+    if (!existingToken) {
+      return null;
+    }
+
+    existingToken.ativo = false;
+
+    return this.pushTokenRepository.save(existingToken);
+  }
+
   async findActiveTokensByUserIds(userIds: number[]): Promise<string[]> {
     if (!userIds.length) {
       return [];
