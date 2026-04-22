@@ -102,6 +102,16 @@ export async function registerForPushNotificationsAsync() {
   };
 }
 
+export async function getCurrentPushTokenAsync() {
+  const token = await getToken(messagingInstance);
+
+  if (!token) {
+    return null;
+  }
+
+  return token;
+}
+
 export function addNotificationReceivedListener(
   callback: (notification: PushNotification) => void,
 ) {

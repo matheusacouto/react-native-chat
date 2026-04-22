@@ -20,3 +20,19 @@ export async function registerPushToken(
 
   return response.data;
 }
+
+export async function unregisterPushToken(idToken: string, token: string) {
+  const response = await API.post(
+    "/push/unregister-token",
+    {
+      token,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+      },
+    },
+  );
+
+  return response.data;
+}

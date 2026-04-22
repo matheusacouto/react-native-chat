@@ -23,8 +23,14 @@ import {
   clearSessionExpiredHandler,
   setSessionExpiredHandler,
 } from "../services/api/client";
-import { registerForPushNotificationsAsync } from "../services/firebase/push";
-import { registerPushToken } from "../services/api/push.service";
+import {
+  getCurrentPushTokenAsync,
+  registerForPushNotificationsAsync,
+} from "../services/firebase/push";
+import {
+  registerPushToken,
+  unregisterPushToken,
+} from "../services/api/push.service";
 
 type AuthUser = {
   id: number;
@@ -179,6 +185,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   async function clearSession() {
     try {
+      await unregisterCurrentDevicePushToken();
       await signOutFirebase();
     } finally {
       lastSyncedFirebaseUidRef.current = null;
@@ -211,6 +218,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await registerPushToken(idToken, pushToken.data, Platform.OS);
     } catch (error) {
       console.log("Falha ao registrar push token", error);
+    }
+  }
+
+  async function unregisterCurrentDevicePushToken() {
+    try {
+      const currentFirebaseUser = getCurrentUser();
+
+      if (!currentFirebaseUser) {
+        return;
+      }
+
+      const pushToken = await getCurrentPushTokenAsync();
+
+      if (!pushToken) {
+        return;
+      }
+
+      const idToken = await getUserIdToken(currentFirebaseUser);
+
+      await unregisterPushToken(idToken, pushToken);
+    } catch (error) {
+      console.log("Falha ao desregistrar push token", error);
     }
   }
 
