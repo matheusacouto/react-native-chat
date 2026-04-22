@@ -11,6 +11,7 @@ type PathRoute =
   | "/forgot-password"
   | "/home"
   | "/notification"
+  | "/notifications"
   | "/global-notification-form"
   | "/individual-notification-form"
   | "/chat";
@@ -27,10 +28,22 @@ const pathMap: Record<PathRoute, keyof RootStackParamList> = {
   "/forgot-password": "ForgotPassword",
   "/home": "Home",
   "/notification": "Notifications",
+  "/notifications": "Notifications",
   "/global-notification-form": "GlobalNotificationForm",
   "/individual-notification-form": "IndividualNotificationForm",
   "/chat": "Chat",
 };
+
+const routeNames = new Set<keyof RootStackParamList>([
+  "Login",
+  "ForgotPassword",
+  "Home",
+  "Notifications",
+  "GlobalNotificationForm",
+  "IndividualNotificationForm",
+  "Chat",
+  "ChatRoom",
+]);
 
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 const pendingActions: Array<() => void> = [];
@@ -39,19 +52,30 @@ function isPathRoute(target: string): target is PathRoute {
   return target in pathMap;
 }
 
+function isRouteName(target: string): target is keyof RootStackParamList {
+  return routeNames.has(target as keyof RootStackParamList);
+}
+
 function resolveTarget(target: RouterTarget) {
   if (typeof target !== "string") {
     return target;
   }
 
-  if (!isPathRoute(target)) {
-    throw new Error(`Rota não mapeada para React Navigation: ${target}`);
+  if (isPathRoute(target)) {
+    return {
+      name: pathMap[target],
+      params: undefined,
+    };
   }
 
-  return {
-    name: pathMap[target],
-    params: undefined,
-  };
+  if (isRouteName(target)) {
+    return {
+      name: target,
+      params: undefined,
+    };
+  }
+
+  throw new Error(`Rota não mapeada para React Navigation: ${target}`);
 }
 
 export const router = {

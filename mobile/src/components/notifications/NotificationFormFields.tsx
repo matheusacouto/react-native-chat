@@ -105,6 +105,7 @@ export function NotificationFormFields({
       />
 
       <View style={styles.fieldGroup}>
+        <Text style={styles.fieldLabel}>Rota de destino</Text>
         <Pressable
           disabled={routeOptions.length === 0}
           onPress={() => setIsRouteDropdownOpen((current) => !current)}
@@ -118,7 +119,7 @@ export function NotificationFormFields({
           >
             {selectedRouteOption?.label ??
               (routeOptions.length > 0
-                ? "Selecione uma rota de destino"
+                ? "Selecione uma rota"
                 : "Nenhuma rota configurada")}
           </Text>
         </Pressable>
