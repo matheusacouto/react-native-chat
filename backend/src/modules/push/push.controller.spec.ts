@@ -8,11 +8,13 @@ describe('PushController', () => {
   let pushController: PushController;
   let pushService: {
     registerToken: jest.Mock;
+    unregisterToken: jest.Mock;
   };
 
   beforeEach(async () => {
     const mockPushService = {
       registerToken: jest.fn(),
+      unregisterToken: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -60,6 +62,30 @@ describe('PushController', () => {
       );
       expect(pushService.registerToken).toHaveBeenCalledTimes(1);
       expect(response).toEqual(result);
+    });
+  });
+
+  describe('unregisterToken', () => {
+    it('should deactivate token for authenticated uid', async () => {
+      const req = {
+        user: {
+          uid: 'firebase-123',
+        },
+      };
+      const body = {
+        token: 'push-token-1',
+      };
+
+      pushService.unregisterToken.mockResolvedValue(null);
+
+      const response = await pushController.unregisterToken(req, body);
+
+      expect(pushService.unregisterToken).toHaveBeenCalledWith(
+        'firebase-123',
+        body.token,
+      );
+      expect(pushService.unregisterToken).toHaveBeenCalledTimes(1);
+      expect(response).toEqual({ success: true });
     });
   });
 });

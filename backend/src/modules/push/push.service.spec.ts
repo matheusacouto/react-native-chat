@@ -169,4 +169,55 @@ describe('PushService', () => {
       );
     });
   });
+
+  describe('unregisterToken', () => {
+    it('should deactivate an existing token for the authenticated user', async () => {
+      const existingPushToken = {
+        id: 30,
+        token: 'push-token-logout',
+        ativo: true,
+        usuario: {
+          id: 1,
+          firebase_uid: 'firebase-123',
+        } as User,
+      } as PushToken;
+      const updatedPushToken = {
+        ...existingPushToken,
+        ativo: false,
+      } as PushToken;
+
+      pushTokenRepository.findOne.mockResolvedValue(existingPushToken);
+      pushTokenRepository.save.mockResolvedValue(updatedPushToken);
+
+      const result = await pushService.unregisterToken(
+        'firebase-123',
+        'push-token-logout',
+      );
+
+      expect(result).toEqual(updatedPushToken);
+      expect(pushTokenRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          token: 'push-token-logout',
+          usuario: {
+            firebase_uid: 'firebase-123',
+          },
+        },
+        relations: ['usuario'],
+      });
+      expect(existingPushToken.ativo).toBe(false);
+      expect(pushTokenRepository.save).toHaveBeenCalledWith(existingPushToken);
+    });
+
+    it('should return null when token does not belong to authenticated user', async () => {
+      pushTokenRepository.findOne.mockResolvedValue(null);
+
+      const result = await pushService.unregisterToken(
+        'firebase-123',
+        'push-token-unknown',
+      );
+
+      expect(result).toBeNull();
+      expect(pushTokenRepository.save).not.toHaveBeenCalled();
+    });
+  });
 });
