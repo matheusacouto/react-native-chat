@@ -3,13 +3,15 @@ import {
   ReactNode,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { Platform } from "react-native";
 import { Alert } from "react-native";
 import { router } from "@/src/navigation/router";
 import {
-  getIdToken,
+  getCurrentUser,
   getUserIdToken,
   onFirebaseAuthStateChanged,
   signInWithEmail,
@@ -66,6 +68,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authFeedback, setAuthFeedback] = useState<AuthFeedback | null>(null);
+  const authSyncPromiseRef = useRef<Promise<AuthUser> | null>(null);
+  const lastSyncedFirebaseUidRef = useRef<string | null>(null);
+  const lastSyncedUserRef = useRef<AuthUser | null>(null);
 
   const isAuthenticated = !!user;
 
@@ -84,17 +89,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const unsubscribe = onFirebaseAuthStateChanged(async (firebaseUser) => {
       if (!firebaseUser) {
+        lastSyncedFirebaseUidRef.current = null;
+        lastSyncedUserRef.current = null;
         setUser(null);
         setIsLoading(false);
         return;
       }
 
       try {
-        const idToken = await getUserIdToken(firebaseUser);
-        const backendUser = await loginWithFirebase(idToken);
-        setUser(backendUser);
-        await registerCurrentDevicePushToken(idToken);
+        await syncAuthenticatedUser(firebaseUser);
       } catch {
+        lastSyncedFirebaseUidRef.current = null;
+        lastSyncedUserRef.current = null;
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -110,16 +116,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       await signInWithEmail(email, password);
-
-      const idToken = await getIdToken();
-
-      if (idToken == null) {
-        throw new Error("Token do Firebase não encontrado!");
-      }
-
-      const user = await loginWithFirebase(idToken);
-
-      setUser(user);
+      await syncAuthenticatedUser();
     } finally {
       setIsLoading(false);
     }
@@ -131,18 +128,52 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       await signInWithGoogleNative();
-
-      const idToken = await getIdToken();
-
-      if (idToken == null) {
-        throw new Error("Token do Firebase não encontrado!");
-      }
-
-      const user = await loginWithFirebase(idToken);
-
-      setUser(user);
+      await syncAuthenticatedUser();
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function syncAuthenticatedUser(
+    firebaseUser?: FirebaseAuthTypes.User,
+  ): Promise<AuthUser> {
+    const currentFirebaseUser = firebaseUser ?? getCurrentUser();
+
+    if (!currentFirebaseUser) {
+      throw new Error("Usuário do Firebase não encontrado!");
+    }
+
+    if (authSyncPromiseRef.current) {
+      return authSyncPromiseRef.current;
+    }
+
+    if (
+      lastSyncedFirebaseUidRef.current === currentFirebaseUser.uid &&
+      lastSyncedUserRef.current
+    ) {
+      return lastSyncedUserRef.current;
+    }
+
+    const syncPromise = (async () => {
+      const idToken = await getUserIdToken(currentFirebaseUser);
+
+      const backendUser = await loginWithFirebase(idToken);
+      lastSyncedFirebaseUidRef.current = currentFirebaseUser.uid;
+      lastSyncedUserRef.current = backendUser;
+      setUser(backendUser);
+      await registerCurrentDevicePushToken(idToken);
+
+      return backendUser;
+    })();
+
+    authSyncPromiseRef.current = syncPromise;
+
+    try {
+      return await syncPromise;
+    } finally {
+      if (authSyncPromiseRef.current === syncPromise) {
+        authSyncPromiseRef.current = null;
+      }
     }
   }
 
@@ -150,6 +181,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       await signOutFirebase();
     } finally {
+      lastSyncedFirebaseUidRef.current = null;
+      lastSyncedUserRef.current = null;
       setUser(null);
     }
   }

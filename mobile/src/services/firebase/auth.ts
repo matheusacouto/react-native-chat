@@ -51,20 +51,18 @@ export async function signOutFirebase() {
   try {
     await signOut(firebaseAuth);
   } finally {
-    if (!googleUser) {
-      return;
-    }
+    if (googleUser) {
+      try {
+        await GoogleSignin.revokeAccess();
+      } catch {
+        // A revogação pode falhar por conectividade ou estado local, mas não deve bloquear o logout.
+      }
 
-    try {
-      await GoogleSignin.revokeAccess();
-    } catch {
-      // A revogação pode falhar por conectividade ou estado local, mas não deve bloquear o logout.
-    }
-
-    try {
-      await GoogleSignin.signOut();
-    } catch {
-      // O usuário pode não ter sessão Google ativa localmente, e isso não deve impedir o logout.
+      try {
+        await GoogleSignin.signOut();
+      } catch {
+        // O usuário pode não ter sessão Google ativa localmente, e isso não deve impedir o logout.
+      }
     }
   }
 }

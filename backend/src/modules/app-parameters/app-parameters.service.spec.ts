@@ -25,7 +25,8 @@ describe('AppParametersService', () => {
       ],
     }).compile();
 
-    appParametersService = module.get<AppParametersService>(AppParametersService);
+    appParametersService =
+      module.get<AppParametersService>(AppParametersService);
     appParametersRepository = module.get(getRepositoryToken(AppParameter));
   });
 
