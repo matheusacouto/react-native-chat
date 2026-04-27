@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { StartChatDto } from './dto/start-chat.dto';
 import { SendMessageDto } from './dto/send-message.dto';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('chat')
 export class ChatController {
@@ -9,8 +10,14 @@ export class ChatController {
 
   //
   @Get('conversation/:conversationId/messages')
-  listMessages(@Param('conversationId') conversationId: string) {
-    return this.chatService.findMessagesByConversation(Number(conversationId));
+  listMessages(
+    @Param('conversationId') conversationId: string,
+    @Query() pagination: PaginationQueryDto,
+  ) {
+    return this.chatService.findMessagesByConversation(
+      Number(conversationId),
+      pagination,
+    );
   }
 
   @Post('message')

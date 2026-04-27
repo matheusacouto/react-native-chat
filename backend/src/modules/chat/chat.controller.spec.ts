@@ -36,17 +36,26 @@ describe('ChatController', () => {
   describe('listMessages', () => {
     it('should return a lista of messages by conversation', async () => {
       const conversationId = '1';
-      const mockMessages = [
-        { id: 1, text: 'Hello', conversationId: 1 },
-        { id: 2, text: 'Hi there', conversationId: 1 },
-      ];
+      const pagination = { limit: 30 };
+      const mockMessages = {
+        data: [
+          { id: 2, text: 'Hi there', conversationId: 1 },
+          { id: 1, text: 'Hello', conversationId: 1 },
+        ],
+        nextCursor: null,
+        hasMore: false,
+      };
 
       chatService.findMessagesByConversation.mockResolvedValue(mockMessages);
 
-      const result = await chatController.listMessages(conversationId);
+      const result = await chatController.listMessages(
+        conversationId,
+        pagination,
+      );
 
       expect(chatService.findMessagesByConversation).toHaveBeenCalledWith(
         Number(conversationId),
+        pagination,
       );
       expect(result).toEqual(mockMessages);
     });

@@ -5,10 +5,12 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { SendGlobalNotificationDto } from './dto/send-global-notification.dto';
 import { SendIndividualNotificationDto } from './dto/send-individual-notification.dto';
 import { NotificationsService } from './notification.service';
@@ -19,8 +21,11 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
-  findAll(@Req() req) {
-    return this.notificationsService.findAllByFirebaseUid(req.user.uid);
+  findAll(@Req() req: any, @Query() pagination: PaginationQueryDto) {
+    return this.notificationsService.findAllByFirebaseUid(
+      req.user.uid,
+      pagination,
+    );
   }
 
   @Patch('read/:recipientId')
@@ -30,7 +35,7 @@ export class NotificationsController {
 
   @Post('individual')
   sendIndividualNotification(
-    @Req() req,
+    @Req() req: any,
     @Body() body: SendIndividualNotificationDto,
   ) {
     return this.notificationsService.sendIndividualNotification(
@@ -45,7 +50,10 @@ export class NotificationsController {
   }
 
   @Post('global')
-  sendGlobalNotification(@Req() req, @Body() body: SendGlobalNotificationDto) {
+  sendGlobalNotification(
+    @Req() req: any,
+    @Body() body: SendGlobalNotificationDto,
+  ) {
     return this.notificationsService.sendGlobalNotification(
       req.user.uid,
       body.title,

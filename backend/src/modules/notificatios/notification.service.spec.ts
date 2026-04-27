@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { UsersService } from '../users/user.service';
 import { NotificationsService } from './notification.service';
 import { Notification, Tipo } from './notification.entity';
@@ -98,15 +98,21 @@ describe('NotificationsService', () => {
         id: 1,
         firebase_uid: 'firebase-123',
       };
-      const recipients = [{ id: 1 }, { id: 2 }] as NotificationRecipient[];
+      const recipients = [{ id: 2 }, { id: 1 }] as NotificationRecipient[];
 
       usersService.findByFirebaseUid.mockResolvedValue(user as User);
       notificationRecipientsRepository.find.mockResolvedValue(recipients);
 
-      const result =
-        await notificationsService.findAllByFirebaseUid('firebase-123');
+      const result = await notificationsService.findAllByFirebaseUid(
+        'firebase-123',
+        { limit: 20 },
+      );
 
-      expect(result).toEqual(recipients);
+      expect(result).toEqual({
+        data: recipients,
+        nextCursor: null,
+        hasMore: false,
+      });
       expect(usersService.findByFirebaseUid).toHaveBeenCalledWith(
         'firebase-123',
       );
@@ -116,10 +122,50 @@ describe('NotificationsService', () => {
             id: user.id,
           },
         },
-        relations: ['notificacao', 'usuario'],
+        relations: ['notificacao'],
         order: {
-          created_at: 'DESC',
+          id: 'DESC',
         },
+        take: 21,
+      });
+    });
+
+    it('should return next cursor when there are more notifications', async () => {
+      const user: Pick<User, 'id' | 'firebase_uid'> = {
+        id: 1,
+        firebase_uid: 'firebase-123',
+      };
+      const recipients = [
+        { id: 5 },
+        { id: 4 },
+        { id: 3 },
+      ] as NotificationRecipient[];
+
+      usersService.findByFirebaseUid.mockResolvedValue(user as User);
+      notificationRecipientsRepository.find.mockResolvedValue(recipients);
+
+      const result = await notificationsService.findAllByFirebaseUid(
+        'firebase-123',
+        { limit: 2, cursor: 6 },
+      );
+
+      expect(result).toEqual({
+        data: [{ id: 5 }, { id: 4 }],
+        nextCursor: 4,
+        hasMore: true,
+      });
+      expect(notificationRecipientsRepository.find).toHaveBeenCalledWith({
+        where: {
+          usuario: {
+            id: user.id,
+          },
+          id: LessThan(6),
+        },
+        relations: ['notificacao'],
+        order: {
+          id: 'DESC',
+        },
+        take: 3,
       });
     });
 
@@ -127,7 +173,9 @@ describe('NotificationsService', () => {
       usersService.findByFirebaseUid.mockResolvedValue(null);
 
       await expect(
-        notificationsService.findAllByFirebaseUid('firebase-123'),
+        notificationsService.findAllByFirebaseUid('firebase-123', {
+          limit: 20,
+        }),
       ).rejects.toThrow(NotFoundException);
 
       expect(notificationRecipientsRepository.find).not.toHaveBeenCalled();
