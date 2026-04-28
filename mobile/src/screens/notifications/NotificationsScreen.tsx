@@ -16,6 +16,9 @@ export default function NotificationsScreen() {
   const requireInternet = useRequireInternet();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<number | null>(null);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     async function loadNotifications() {
@@ -30,8 +33,10 @@ export default function NotificationsScreen() {
           return;
         }
 
-        const data = await getNotifications(idToken);
-        setNotifications(data);
+        const response = await getNotifications(idToken);
+        setNotifications(response.data);
+        setNextCursor(response.nextCursor);
+        setHasMore(response.hasMore);
       } finally {
         setIsLoading(false);
       }
@@ -39,6 +44,36 @@ export default function NotificationsScreen() {
 
     loadNotifications();
   }, [requireInternet]);
+
+  async function loadMoreNotifications() {
+    if (isLoadingMore || !hasMore || !nextCursor) {
+      return;
+    }
+
+    if (!requireInternet("Conecte-se para carregar mais notificações.")) {
+      return;
+    }
+
+    const idToken = await getIdToken();
+
+    if (!idToken) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+
+    try {
+      const response = await getNotifications(idToken, {
+        cursor: nextCursor,
+      });
+
+      setNotifications((current) => [...current, ...response.data]);
+      setNextCursor(response.nextCursor);
+      setHasMore(response.hasMore);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -89,6 +124,13 @@ export default function NotificationsScreen() {
         data={notifications}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.listContent}
+        onEndReached={loadMoreNotifications}
+        onEndReachedThreshold={0.4}
+        ListFooterComponent={
+          isLoadingMore ? (
+            <Text style={styles.message}>Carregando mais notificações...</Text>
+          ) : null
+        }
         ListEmptyComponent={
           <Text style={styles.message}>Nenhuma notificação encontrada.</Text>
         }

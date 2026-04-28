@@ -15,9 +15,12 @@ export default function ChatListScreen() {
 
   const [users, setUsers] = useState<UserModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<number | null>(null);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
-    async function loadUser() {
+    async function loadUsers() {
       try {
         const idToken = await getIdToken();
 
@@ -25,15 +28,43 @@ export default function ChatListScreen() {
           return;
         }
 
-        const data = await getUsers(idToken);
-        setUsers(data);
+        const response = await getUsers(idToken);
+        setUsers(response.data);
+        setNextCursor(response.nextCursor);
+        setHasMore(response.hasMore);
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadUser();
+    loadUsers();
   }, []);
+
+  async function loadMoreUsers() {
+    if (isLoadingMore || !hasMore || !nextCursor) {
+      return;
+    }
+
+    const idToken = await getIdToken();
+
+    if (!idToken) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+
+    try {
+      const response = await getUsers(idToken, {
+        cursor: nextCursor,
+      });
+
+      setUsers((current) => [...current, ...response.data]);
+      setNextCursor(response.nextCursor);
+      setHasMore(response.hasMore);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
 
   async function handleOpenChat(targetUser: UserModel) {
     if (!user) {
@@ -71,6 +102,13 @@ export default function ChatListScreen() {
         data={users.filter((item) => item.id !== user?.id)}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.listContent}
+        onEndReached={loadMoreUsers}
+        onEndReachedThreshold={0.4}
+        ListFooterComponent={
+          isLoadingMore ? (
+            <Text style={styles.message}>Carregando mais usuários...</Text>
+          ) : null
+        }
         renderItem={({ item }) => (
           <Pressable
             onPress={() => handleOpenChat(item)}

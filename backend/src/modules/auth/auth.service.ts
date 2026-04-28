@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/user.service';
 import { FirebaseAuthService } from '../firebase/firebase.service';
 import { User } from '../users/user.entity';
@@ -11,7 +15,14 @@ export class AuthService {
   ) {}
 
   async loginWithFirebase(idToken: string): Promise<User> {
-    const token = await this.firebaseService.verifyIdToken(idToken);
+    let token: Awaited<ReturnType<FirebaseAuthService['verifyIdToken']>>;
+
+    try {
+      token = await this.firebaseService.verifyIdToken(idToken);
+    } catch {
+      throw new UnauthorizedException('Token do Firebase inválido.');
+    }
+
     const firebaseUid = token.uid;
     const provider = token.firebase?.sign_in_provider ?? 'firebase';
     const loginTimestamp = new Date();

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "@/src/navigation/router";
 import { getIdToken } from "@/src/services/firebase/auth";
@@ -20,6 +20,9 @@ export default function SendIndividualNotificationScreen() {
 
   const [users, setUsers] = useState<UserModel[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+  const [isLoadingMoreUsers, setIsLoadingMoreUsers] = useState(false);
+  const [nextUsersCursor, setNextUsersCursor] = useState<number | null>(null);
+  const [hasMoreUsers, setHasMoreUsers] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   const [title, setTitle] = useState("");
@@ -45,8 +48,10 @@ export default function SendIndividualNotificationScreen() {
           return;
         }
 
-        const data: UserModel[] = await getUsers(idToken);
-        setUsers(data.filter((item) => item.id !== user?.id));
+        const response = await getUsers(idToken);
+        setUsers(response.data.filter((item) => item.id !== user?.id));
+        setNextUsersCursor(response.nextCursor);
+        setHasMoreUsers(response.hasMore);
       } catch (error) {
         setFeedback({
           message: getUserFriendlyErrorMessage(
@@ -62,6 +67,47 @@ export default function SendIndividualNotificationScreen() {
 
     loadUsers();
   }, [requireInternet, user?.id]);
+
+  async function loadMoreUsers() {
+    if (isLoadingMoreUsers || !hasMoreUsers || !nextUsersCursor) {
+      return;
+    }
+
+    if (!requireInternet("Conecte-se para carregar mais usuários.")) {
+      return;
+    }
+
+    const idToken = await getIdToken();
+
+    if (!idToken) {
+      return;
+    }
+
+    setIsLoadingMoreUsers(true);
+
+    try {
+      const response = await getUsers(idToken, {
+        cursor: nextUsersCursor,
+      });
+
+      setUsers((current) => [
+        ...current,
+        ...response.data.filter((item) => item.id !== user?.id),
+      ]);
+      setNextUsersCursor(response.nextCursor);
+      setHasMoreUsers(response.hasMore);
+    } catch (error) {
+      setFeedback({
+        message: getUserFriendlyErrorMessage(
+          error,
+          "Não foi possível carregar mais usuários agora.",
+        ),
+        variant: "error",
+      });
+    } finally {
+      setIsLoadingMoreUsers(false);
+    }
+  }
 
   async function handleSendNotification() {
     if (!requireInternet()) {
@@ -159,12 +205,20 @@ export default function SendIndividualNotificationScreen() {
             Nenhum destinatário disponível no momento.
           </Text>
         ) : (
-          <ScrollView
+          <FlatList
+            data={users}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.userList}
-          >
-            {users.map((item) => {
+            keyExtractor={(item) => String(item.id)}
+            onEndReached={loadMoreUsers}
+            onEndReachedThreshold={0.4}
+            ListFooterComponent={
+              isLoadingMoreUsers ? (
+                <Text style={styles.helperText}>Carregando...</Text>
+              ) : null
+            }
+            renderItem={({ item }) => {
               const isSelected = selectedUserId === item.id;
 
               return (
@@ -186,8 +240,8 @@ export default function SendIndividualNotificationScreen() {
                   </Text>
                 </Pressable>
               );
-            })}
-          </ScrollView>
+            }}
+          />
         )}
       </View>
 

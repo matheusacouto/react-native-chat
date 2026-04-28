@@ -53,8 +53,10 @@ export default function ChatRoomScreen() {
         return;
       }
 
-      const data = await getConversationMessages(Number(conversationId));
-      setMessages(data);
+      const response = await getConversationMessages(Number(conversationId), {
+        limit: 50,
+      });
+      setMessages(response.data.slice().reverse());
       setErrorMessage("");
     } catch (error) {
       setErrorMessage(

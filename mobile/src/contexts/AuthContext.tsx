@@ -117,27 +117,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   async function signIn(email: string, password: string) {
-    setIsLoading(true);
     setAuthFeedback(null);
-
-    try {
-      await signInWithEmail(email, password);
-      await syncAuthenticatedUser();
-    } finally {
-      setIsLoading(false);
-    }
+    await signInWithEmail(email, password);
+    await syncAuthenticatedUser();
   }
 
   async function signInWithGoogle() {
-    setIsLoading(true);
     setAuthFeedback(null);
-
-    try {
-      await signInWithGoogleNative();
-      await syncAuthenticatedUser();
-    } finally {
-      setIsLoading(false);
-    }
+    await signInWithGoogleNative();
+    await syncAuthenticatedUser();
   }
 
   async function syncAuthenticatedUser(
