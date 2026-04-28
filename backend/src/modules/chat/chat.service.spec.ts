@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { UsersService } from '../users/user.service';
 import { ChatService } from './chat.service';
 import { Conversation } from './entity/conversation.entity';
@@ -95,16 +95,22 @@ describe('ChatService', () => {
     it('should return messages when conversation exists', async () => {
       const mockConversation = { id: 1 } as Conversation;
       const mockMessages = [
-        { id: 1, mensagem: 'Oi' },
         { id: 2, mensagem: 'Tudo bem?' },
+        { id: 1, mensagem: 'Oi' },
       ] as Message[];
 
       conversationRepository.findOneBy.mockResolvedValue(mockConversation);
       messageRepository.find.mockResolvedValue(mockMessages);
 
-      const result = await chatService.findMessagesByConversation(1);
+      const result = await chatService.findMessagesByConversation(1, {
+        limit: 30,
+      });
 
-      expect(result).toEqual(mockMessages);
+      expect(result).toEqual({
+        data: mockMessages,
+        nextCursor: null,
+        hasMore: false,
+      });
       expect(conversationRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
       expect(messageRepository.find).toHaveBeenCalledWith({
         where: {
@@ -112,19 +118,59 @@ describe('ChatService', () => {
             id: 1,
           },
         },
-        relations: ['remetente', 'destinatario', 'conversa'],
+        relations: ['remetente', 'destinatario'],
         order: {
-          created_at: 'ASC',
+          id: 'DESC',
         },
+        take: 31,
+      });
+    });
+
+    it('should return next cursor when there are more messages', async () => {
+      const mockConversation = { id: 1 } as Conversation;
+      const mockMessages = [
+        { id: 5, mensagem: 'Mais nova' },
+        { id: 4, mensagem: 'Intermediaria' },
+        { id: 3, mensagem: 'Extra' },
+      ] as Message[];
+
+      conversationRepository.findOneBy.mockResolvedValue(mockConversation);
+      messageRepository.find.mockResolvedValue(mockMessages);
+
+      const result = await chatService.findMessagesByConversation(1, {
+        limit: 2,
+        cursor: 6,
+      });
+
+      expect(result).toEqual({
+        data: [
+          { id: 5, mensagem: 'Mais nova' },
+          { id: 4, mensagem: 'Intermediaria' },
+        ],
+        nextCursor: 4,
+        hasMore: true,
+      });
+      expect(messageRepository.find).toHaveBeenCalledWith({
+        where: {
+          conversa: {
+            id: 1,
+          },
+          id: LessThan(6),
+        },
+        relations: ['remetente', 'destinatario'],
+        order: {
+          id: 'DESC',
+        },
+        take: 3,
       });
     });
 
     it('should throw NotFoundException when conversation does not exist', async () => {
       conversationRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(chatService.findMessagesByConversation(1)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        chatService.findMessagesByConversation(1, { limit: 30 }),
+      ).rejects.toThrow(NotFoundException);
 
       expect(messageRepository.find).not.toHaveBeenCalled();
     });

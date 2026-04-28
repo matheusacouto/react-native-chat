@@ -5,9 +5,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Message } from './entity/message.entity';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { Conversation } from './entity/conversation.entity';
 import { UsersService } from '../users/user.service';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
+import { PaginatedResponse } from '../../common/types/paginated-response.type';
 
 @Injectable()
 export class ChatService {
@@ -56,7 +58,10 @@ export class ChatService {
     return conversation || null;
   }
 
-  async findMessagesByConversation(conversationId: number): Promise<Message[]> {
+  async findMessagesByConversation(
+    conversationId: number,
+    pagination: PaginationQueryDto,
+  ): Promise<PaginatedResponse<Message>> {
     const conversation = await this.conversationRepository.findOneBy({
       id: conversationId,
     });
@@ -65,17 +70,31 @@ export class ChatService {
       throw new NotFoundException('Conversa não encontrada.');
     }
 
-    return this.messageRepository.find({
+    const { limit = 30, cursor } = pagination;
+
+    const messages = await this.messageRepository.find({
       where: {
         conversa: {
           id: conversationId,
         },
+        ...(cursor ? { id: LessThan(cursor) } : {}),
       },
-      relations: ['remetente', 'destinatario', 'conversa'],
+      relations: ['remetente', 'destinatario'],
       order: {
-        created_at: 'ASC',
+        id: 'DESC',
       },
+      take: limit + 1,
     });
+
+    const hasMore = messages.length > limit;
+    const data = hasMore ? messages.slice(0, limit) : messages;
+    const nextCursor = hasMore ? data[data.length - 1].id : null;
+
+    return {
+      data,
+      nextCursor,
+      hasMore,
+    };
   }
 
   /**

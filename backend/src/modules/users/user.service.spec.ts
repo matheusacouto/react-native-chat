@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { UsersService } from './user.service';
 import { User } from './user.entity';
 
@@ -38,6 +38,75 @@ describe('UsersService', () => {
 
       expect(result).toEqual(users);
       expect(repository.find).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('findAllPaginated', () => {
+    it('should return paginated users with reduced fields', async () => {
+      const users = [
+        { id: 2, nome: 'Ana', email: 'ana@example.com' },
+        { id: 1, nome: 'Matheus', email: 'matheus@example.com' },
+      ] as User[];
+
+      repository.find.mockResolvedValue(users);
+
+      const result = await service.findAllPaginated({ limit: 20 });
+
+      expect(result).toEqual({
+        data: users,
+        nextCursor: null,
+        hasMore: false,
+      });
+      expect(repository.find).toHaveBeenCalledWith({
+        where: {},
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+        },
+        order: {
+          id: 'DESC',
+        },
+        take: 21,
+      });
+    });
+
+    it('should return next cursor when there are more users', async () => {
+      const users = [
+        { id: 5, nome: 'Ana', email: 'ana@example.com' },
+        { id: 4, nome: 'Bia', email: 'bia@example.com' },
+        { id: 3, nome: 'Caio', email: 'caio@example.com' },
+      ] as User[];
+
+      repository.find.mockResolvedValue(users);
+
+      const result = await service.findAllPaginated({
+        limit: 2,
+        cursor: 6,
+      });
+
+      expect(result).toEqual({
+        data: [
+          { id: 5, nome: 'Ana', email: 'ana@example.com' },
+          { id: 4, nome: 'Bia', email: 'bia@example.com' },
+        ],
+        nextCursor: 4,
+        hasMore: true,
+      });
+      expect(repository.find).toHaveBeenCalledWith({
+        where: {
+          id: LessThan(6),
+        },
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+        },
+        order: {
+          id: 'DESC',
+        },
+        take: 3,
+      });
     });
   });
 

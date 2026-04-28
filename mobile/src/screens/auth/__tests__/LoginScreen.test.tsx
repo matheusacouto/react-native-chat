@@ -93,6 +93,35 @@ describe("LoginScreen", () => {
     expect(mockRouter.replace).not.toHaveBeenCalled();
   });
 
+  it("shows an error message when e-mail or password is invalid", async () => {
+    const signIn = jest.fn().mockRejectedValue({
+      code: "auth/invalid-credential",
+    });
+
+    mockUseAuth.mockReturnValue({
+      signIn,
+      signInWithGoogle: jest.fn(),
+      isLoading: false,
+      isAuthenticated: false,
+      authFeedback: null,
+      clearAuthFeedback: jest.fn(),
+    });
+
+    const { getByPlaceholderText, getAllByText, getByText } = render(
+      <LoginScreen />,
+    );
+
+    fireEvent.changeText(getByPlaceholderText("E-mail"), "teste@email.com");
+    fireEvent.changeText(getByPlaceholderText("Senha"), "senha-incorreta");
+    fireEvent.press(getAllByText("Entrar")[1]);
+
+    await waitFor(() => {
+      expect(getByText("E-mail ou senha incorretos.")).toBeTruthy();
+    });
+
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+  });
+
   it("calls google sign-in and redirects to home", async () => {
     const signInWithGoogle = jest.fn().mockResolvedValue(undefined);
 

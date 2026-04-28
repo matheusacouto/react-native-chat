@@ -49,15 +49,23 @@ describe('NotificationsController', () => {
           uid: 'firebase-123',
         },
       };
+      const pagination = {
+        limit: 20,
+      };
 
-      const result = [{ id: 1 }, { id: 2 }];
+      const result = {
+        data: [{ id: 1 }, { id: 2 }],
+        nextCursor: null,
+        hasMore: false,
+      };
 
       notificationsService.findAllByFirebaseUid.mockResolvedValue(result);
 
-      const response = await notificationsController.findAll(req);
+      const response = await notificationsController.findAll(req, pagination);
 
       expect(notificationsService.findAllByFirebaseUid).toHaveBeenCalledWith(
         'firebase-123',
+        pagination,
       );
       expect(notificationsService.findAllByFirebaseUid).toHaveBeenCalledTimes(
         1,

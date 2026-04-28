@@ -4,13 +4,18 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { Notification, Tipo } from './notification.entity';
 import { NotificationRecipient } from './notification-recipient.entity';
+
 import { UsersService } from '../users/user.service';
 import { User } from '../users/user.entity';
+
 import { PushService } from '../push/push.service';
 import { FirebaseAuthService } from '../firebase/firebase.service';
+
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
+import { PaginatedResponse } from '../../common/types/paginated-response.type';
 
 @Injectable()
 export class NotificationsService {
@@ -28,20 +33,35 @@ export class NotificationsService {
 
   async findAllByFirebaseUid(
     firebaseUid: string,
-  ): Promise<NotificationRecipient[]> {
+    pagination: PaginationQueryDto,
+  ): Promise<PaginatedResponse<NotificationRecipient>> {
     const user = await this.getUserByFirebaseUid(firebaseUid);
 
-    return this.notificationRecipientsRepository.find({
+    const { limit = 20, cursor } = pagination;
+
+    const recipients = await this.notificationRecipientsRepository.find({
       where: {
         usuario: {
           id: user.id,
         },
+        ...(cursor ? { id: LessThan(cursor) } : {}),
       },
-      relations: ['notificacao', 'usuario'],
+      relations: ['notificacao'],
       order: {
-        created_at: 'DESC',
+        id: 'DESC',
       },
+      take: limit + 1,
     });
+
+    const hasMore = recipients.length > limit;
+    const data = hasMore ? recipients.slice(0, limit) : recipients;
+    const nextCursor = hasMore ? data[data.length - 1].id : null;
+
+    return {
+      data,
+      nextCursor,
+      hasMore,
+    };
   }
 
   async markAsRead(

@@ -1,4 +1,9 @@
 import { API } from "./client";
+import { MessageModel } from "@/src/models/message";
+import {
+  PaginatedResponse,
+  PaginationParams,
+} from "@/src/models/paginated-response";
 
 export async function startConversation(
   currentUserId: number,
@@ -26,9 +31,15 @@ export async function sendMessage(
   return response.data;
 }
 
-export async function getConversationMessages(conversationId: number) {
+export async function getConversationMessages(
+  conversationId: number,
+  pagination?: PaginationParams,
+): Promise<PaginatedResponse<MessageModel>> {
   const response = await API.get(
     `/chat/conversation/${conversationId}/messages`,
+    {
+      params: pagination,
+    },
   );
 
   return response.data;

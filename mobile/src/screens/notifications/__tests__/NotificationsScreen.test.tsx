@@ -55,7 +55,11 @@ describe("NotificationsScreen", () => {
   beforeEach(() => {
     mockUseRequireInternet.mockReturnValue(jest.fn(() => true));
     mockGetIdToken.mockResolvedValue("fake-token");
-    mockGetNotifications.mockResolvedValue(notificationsFixture);
+    mockGetNotifications.mockResolvedValue({
+      data: notificationsFixture,
+      nextCursor: null,
+      hasMore: false,
+    });
     mockMarkNotificationAsRead.mockImplementation(
       async (_idToken: string, recipientId: number) => ({
         ...notificationsFixture.find((item) => item.id === recipientId),

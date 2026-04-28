@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as admin from 'firebase-admin';
 import { FirebaseAuthService } from '../firebase/firebase.service';
@@ -230,14 +230,14 @@ describe('AuthService', () => {
       expect(usersService.updateLastLogin).not.toHaveBeenCalled();
     });
 
-    it('should throw an error when token is invalid', async () => {
+    it('should throw UnauthorizedException when token is invalid', async () => {
       const idToken = 'invalid-id-token';
       const error = new Error('Invalid Firebase token');
 
       firebaseService.verifyIdToken.mockRejectedValue(error);
 
       await expect(authService.loginWithFirebase(idToken)).rejects.toThrow(
-        error,
+        UnauthorizedException,
       );
 
       expect(firebaseService.verifyIdToken).toHaveBeenCalledWith(idToken);

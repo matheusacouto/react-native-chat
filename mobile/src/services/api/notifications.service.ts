@@ -1,10 +1,19 @@
 import { API } from "./client";
+import { NotificationItem } from "@/src/models/notification";
+import {
+  PaginatedResponse,
+  PaginationParams,
+} from "@/src/models/paginated-response";
 
-export async function getNotifications(idToken: string) {
+export async function getNotifications(
+  idToken: string,
+  pagination?: PaginationParams,
+): Promise<PaginatedResponse<NotificationItem>> {
   const response = await API.get("/notifications", {
     headers: {
       Authorization: `Bearer ${idToken}`,
     },
+    params: pagination,
   });
 
   return response.data;

@@ -3,7 +3,7 @@ import { UserModel } from "./user";
 
 export type MessageModel = {
   id: number;
-  conversa: ConversationModel;
+  conversa?: ConversationModel;
   remetente: UserModel;
   destinatario: UserModel;
   mensagem: string;

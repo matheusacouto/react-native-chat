@@ -29,6 +29,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (isAuthenticated) {
     return <Redirect href="/home" />;
@@ -47,6 +48,7 @@ export default function LoginScreen() {
     }
 
     setErrorMessage("");
+    setIsSubmitting(true);
 
     try {
       await signIn(email.trim(), password);
@@ -58,6 +60,8 @@ export default function LoginScreen() {
           "Não foi possível entrar agora. Tente novamente.",
         ),
       );
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -68,6 +72,7 @@ export default function LoginScreen() {
 
     clearAuthFeedback();
     setErrorMessage("");
+    setIsSubmitting(true);
 
     try {
       await signInWithGoogle();
@@ -79,6 +84,8 @@ export default function LoginScreen() {
           "Não foi possível entrar com Google agora.",
         ),
       );
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -135,7 +142,7 @@ export default function LoginScreen() {
           <AppButton
             title="Entrar"
             onPress={handleLogin}
-            loading={isLoading}
+            loading={isLoading || isSubmitting}
             style={styles.button}
           />
 
@@ -143,8 +150,8 @@ export default function LoginScreen() {
             <AppButton
               title="Entrar com Google"
               onPress={handleGoogleLogin}
-              loading={isLoading}
-              disabled={isLoading}
+              loading={isLoading || isSubmitting}
+              disabled={isLoading || isSubmitting}
               variant="secondary"
               style={styles.googleButton}
             />
